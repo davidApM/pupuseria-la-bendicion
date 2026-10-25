@@ -146,3 +146,31 @@ async function actualizarEstado(id, nuevoEstado) {
 // Consultar órdenes automáticamente cada 4 segundos
 setInterval(obtenerComandas, 4000);
 obtenerComandas();
+
+// Función para refrescar el tiempo de las tarjetas visibles en pantalla
+function actualizarRelojesPantalla() {
+    document.querySelectorAll('.card-comanda').forEach(card => {
+        // Obtenemos el tiempo o la hora almacenada en la tarjeta
+        const timerElemento = card.querySelector('.timer-badge');
+        if (!timerElemento) return;
+
+        // Extraemos los minutos actuales y los incrementamos
+        let textoActual = timerElemento.innerText.replace(/[^0-9]/g, '');
+        let minutos = parseInt(textoActual) || 0;
+        
+        // Si la tarjeta no está marcada como "Listo", actualizamos
+        if (!card.classList.contains('card-listo')) {
+            minutos++;
+            timerElemento.innerHTML = `<i class="fa-regular fa-clock me-1"></i> ${minutos} min`;
+            
+            // Si supera o iguala los 15 minutos, se activa la alerta visual
+            if (minutos >= 15) {
+                card.classList.add('card-alerta');
+                timerElemento.classList.add('bg-danger');
+            }
+        }
+    });
+}
+
+// Actualizar los relojes cada 60 segundos (1 minuto)
+setInterval(actualizarRelojesPantalla, 60000);
