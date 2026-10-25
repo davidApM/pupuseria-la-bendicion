@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pupusería La Bendición - Dashboard Administrativo</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <!-- Chart.js for Sales Analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary-color: #d35400;
+            --primary-hover: #e67e22;
+            --secondary-color: #f39c12;
+            --dark-bg: #1e1e1e;
+            --card-dark: #2a2a2a;
+            --light-bg: #fcf8f2;
+            --sidebar-width: 260px;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--light-bg);
+            color: #2c3e50;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Login Screen Overlay */
+        #login-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: linear-gradient(135deg, rgba(30,30,30,0.95), rgba(211,84,0,0.88)), 
+                        url('https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1200&q=80') center/cover no-repeat;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.4s ease, visibility 0.4s ease;
+        }
+
+        .login-card {
+            background: #ffffff;
+            border-radius: 20px;
+            width: 100%;
+            max-width: 440px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+            border: 3px solid var(--secondary-color);
+            overflow: hidden;
+        }
+
+        .login-header {
+            background: linear-gradient(135deg, var(--primary-color), #c0392b);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+
+        /* Sidebar & Layout */
+        .wrapper {
+            display: flex;
+            width: 100%;
+            align-items: stretch;
+        }
+
+        #sidebar {
+            min-width: var(--sidebar-width);
+            max-width: var(--sidebar-width);
+            background: var(--dark-bg);
+            color: #fff;
+            transition: all 0.3s;
+            min-height: 100vh;
+            z-index: 1000;
+        }
+
+        #sidebar .sidebar-header {
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.25);
+            border-bottom: 3px solid var(--secondary-color);
+        }
+
+        #sidebar ul.components {
+            padding: 20px 0;
+        }
+
+        #sidebar ul li a {
+            padding: 14px 25px;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #d1d5db;
+            text-decoration: none;
+            transition: all 0.2s;
+            font-weight: 600;
+        }
+
+        #sidebar ul li a:hover, 
+        #sidebar ul li.active > a {
+            color: #fff;
+            background: var(--primary-color);
+            border-left: 5px solid var(--secondary-color);
+        }
+
+        #content {
+            width: 100%;
+            padding: 25px;
+            min-height: 100vh;
+            transition: all 0.3s;
+        }
+
+        /* Custom Cards & UI */
+        .stat-card {
+            border: none;
+            border-radius: 16px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            transition: transform 0.2s;
+            background: #fff;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+        }
+
+        .stat-icon {
+            width: 55px;
+            height: 55px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        /* Status Badges */
+        .badge-comal { background-color: #e67e22; color: #fff; }
+        .badge-listo { background-color: #27ae60; color: #fff; }
+        .badge-entregado { background-color: #2980b9; color: #fff; }
+        .badge-cancelado { background-color: #c0392b; color: #fff; }
+
+        .btn-action {
+            padding: 4px 10px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            border-radius: 8px;
+        }
+
+        /* Kitchen KDS Styling */
+        .kds-card {
+            background: #fff;
+            border-radius: 16px;
+            border-top: 8px solid var(--primary-color);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+            transition: all 0.3s;
+        }
+
+        .kds-card.overtime {
+            border-top-color: #e74c3c !important;
+            animation: pulse-border 1.2s infinite;
+        }
+
+        @keyframes pulse-border {
+            0% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7); }
+            70% { box-shadow: 0 0 0 12px rgba(231, 76, 60, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); }
+        }
+
+        .kds-btn {
+            font-size: 1.1rem;
+            padding: 12px;
+            border-radius: 10px;
+            font-weight: 700;
+        }
+
+        /* Responsive Mobile Styles */
+        @media (max-width: 768px) {
+            #sidebar {
+                margin-left: calc(-1 * var(--sidebar-width));
+            }
+            #sidebar.active {
+                margin-left: 0;
+            }
+            #content {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- OVERLAY DE LOGIN / AUTENTICACIÓN -->
+    <div id="login-overlay">
+        <div class="login-card p-0">
+            <div class="login-header">
+                <i class="fa-solid fa-fire-burner fs-1 mb-2 text-warning"></i>
+                <h3 class="fw-bold m-0">Pupusería La Bendición</h3>
+                <small class="text-white-50">Panel de Control Administrativo & Comales</small>
+            </div>
+            <div class="p-4">
+                <div id="login-alert" class="alert alert-danger d-none py-2 small text-center" role="alert">
+                    Usuario o contraseña incorrectos.
+                </div>
+                <form id="form-login" onsubmit="autenticarUsuario(event)">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small text-muted">Usuario</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light"><i class="fa-solid fa-user text-muted"></i></span>
+                            <input type="text" id="login-user" class="form-control" placeholder="admin o cocina" required>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold small text-muted">Contraseña</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light"><i class="fa-solid fa-lock text-muted"></i></span>
+                            <input type="password" id="login-pass" class="form-control" placeholder="••••••••" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-warning w-100 py-2.5 fw-bold text-dark shadow-sm">
+                        <i class="fa-solid fa-right-to-bracket me-2"></i> Iniciar Sesión
+                    </button>
+                </form>
+                <div class="mt-4 pt-3 border-top text-center text-muted small">
+                    <strong>Credenciales de Prueba:</strong><br>
+                    🛡️ Admin: <code>admin</code> / <code>1234</code><br>
+                    🍳 Cocina KDS: <code>cocina</code> / <code>1234</code>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN APP STRUCTURE -->
+    <div class="wrapper" id="main-app" style="display: none;">
+        
+        <!-- SIDEBAR -->
+        <nav id="sidebar">
+            <div class="sidebar-header d-flex align-items-center gap-3">
+                <i class="fa-solid fa-utensils fs-3 text-warning"></i>
+                <div>
+                    <h6 class="fw-bold m-0 text-white">La Bendición</h6>
+                    <small class="badge bg-warning text-dark px-2" id="user-role-badge">Admin</small>
+                </div>
+            </div>
+
+            <ul class="list-unstyled components">
+                <li class="active" id="nav-dashboard">
+                    <a href="#" onclick="navegarA('dashboard')">
+                        <i class="fa-solid fa-chart-line"></i> Dashboard
+                    </a>
+                </li>
+                <li id="nav-pedidos">
+                    <a href="#" onclick="navegarA('pedidos')">
+                        <i class="fa-solid fa-receipt"></i> Gestión de Pedidos
+                    </a>
+                </li>
+                <li id="nav-cocina">
+                    <a href="#" onclick="navegarA('cocina')">
+                        <i class="fa-solid fa-fire-burner"></i> Vista Cocina KDS
+                    </a>
+                </li>
+                <li id="nav-menu">
+                    <a href="#" onclick="navegarA('menu')">
+                        <i class="fa-solid fa-book-open"></i> Catálogo Menú
+                    </a>
+                </li>
+            </ul>
+
+            <div class="px-3 mt-auto mb-4">
+                <button class="btn btn-outline-danger w-100 fw-semibold text-white d-flex align-items-center justify-content-center gap-2" onclick="cerrarSesion()">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i> Cerrar Sesión
+                </button>
+            </div>
+        </nav>
+
+        <!-- CONTENT AREA -->
+        <div id="content">
+            
+            <!-- NAVBAR TOP -->
+            <nav class="navbar navbar-expand-lg navbar-light bg-white rounded-3 shadow-sm p-3 mb-4 d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center gap-3">
+                    <button type="button" id="sidebarCollapse" class="btn btn-warning btn-sm text-dark d-md-none" onclick="toggleSidebar()">
+                        <i class="fa-solid fa-bars"></i>
+                    </button>
+                    <h4 class="fw-bold m-0 text-dark" id="page-title">Dashboard General</h4>
+                </div>
+                <div class="d-flex align-items-center gap-3">
+                    <span class="text-muted small d-none d-sm-inline"><i class="fa-regular fa-calendar me-1"></i> <span id="current-date"></span></span>
+                    <div class="dropdown">
+                        <button class="btn btn-light rounded-circle shadow-sm" type="button" id="userMenu" data-bs-toggle="dropdown">
+                            <i class="fa-solid fa-user-gear text-dark"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item text-danger fw-semibold" href="#" onclick="cerrarSesion()">Cerrar Sesión</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </nav>
+
+            <!-- VISTA 1: DASHBOARD / RESUMEN -->
+            <div id="section-dashboard" class="view-section">
+                <!-- Tarjetas KPI -->
+                <div class="row g-3 mb-4">
+                    <div class="col-md-3 col-sm-6">
+                        <div class="stat-card p-3 d-flex align-items-center justify-content-between">
+                            <div>
+                                <small class="text-muted fw-semibold">Ventas del Día</small>
+                                <h3 class="fw-bold m-0 text-success" id="kpi-ventas">$0.00</h3>
+                            </div>
+                            <div class="stat-icon bg-success bg-opacity-10 text-success">
+                                <i class="fa-solid fa-dollar-sign"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6">
+                        <div class="stat-card p-3 d-flex align-items-center justify-content-between">
+                            <div>
+                                <small class="text-muted fw-semibold">Total Pedidos</small>
+                                <h3 class="fw-bold m-0 text-primary" id="kpi-pedidos">0</h3>
+                            </div>
+                            <div class="stat-icon bg-primary bg-opacity-10 text-primary">
+                                <i class="fa-solid fa-bag-shopping"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6">
+                        <div class="stat-card p-3 d-flex align-items-center justify-content-between">
+                            <div>
+                                <small class="text-muted fw-semibold">En Comal (Activos)</small>
+                                <h3 class="fw-bold m-0 text-warning" id="kpi-activos">0</h3>
+                            </div>
+                            <div class="stat-icon bg-warning bg-opacity-10 text-warning">
+                                <i class="fa-solid fa-fire"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6">
+                        <div class="stat-card p-3 d-flex align-items-center justify-content-between">
+                            <div>
+                                <small class="text-muted fw-semibold">Tiempo Promedio</small>
+                                <h3 class="fw-bold m-0 text-danger" id="kpi-promedio">12 min</h3>
+                            </div>
+                            <div class="stat-icon bg-danger bg-opacity-10 text-danger">
+                                <i class="fa-solid fa-stopwatch"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Gráficos y Tablas -->
+                <div class="row g-4">
+                    <div class="col-lg-7">
+                        <div class="card border-0 shadow-sm rounded-3 p-3">
+                            <h6 class="fw-bold mb-3 text-dark"><i class="fa-solid fa-chart-area me-2 text-warning"></i>Ventas del Día por Hora</h6>
+                            <canvas id="chart-ventas" height="120"></canvas>
+                        </div>
+                    </div>
+                    <div class="col-lg-5">
+                        <div class="card border-0 shadow-sm rounded-3 p-3">
+                            <h6 class="fw-bold mb-3 text-dark"><i class="fa-solid fa-pie-chart me-2 text-warning"></i>Pupusas Más Vendidas</h6>
+                            <canvas id="chart-pupusas" height="180"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VISTA 2: GESTIÓN DE PEDIDOS -->
+            <div id="section-pedidos" class="view-section d-none">
+                <div class="card border-0 shadow-sm rounded-3 p-3">
+                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+                        <h5 class="fw-bold m-0 text-dark"><i class="fa-solid fa-list-check me-2 text-warning"></i>Administración de Comandas</h5>
+                        <button class="btn btn-warning btn-sm fw-bold shadow-sm" onclick="abrirModalNuevoPedido()">
+                            <i class="fa-solid fa-plus me-1"></i> Nuevo Pedido
+                        </button>
+                    </div>
+
+                    <!-- Filtros y Búsqueda -->
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-4">
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text bg-white"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
+                                <input type="text" id="filter-search" class="form-control" placeholder="Buscar por cliente o #ID..." onkeyup="filtrarTablaPedidos()">
+                            </div>
+                        </div>
+                        <div class="col-md-8 d-flex justify-content-md-end gap-1">
+                            <button class="btn btn-sm btn-outline-secondary active" id="btn-filter-todos" onclick="filtrarEstadoTabla('Todos')">Todos</button>
+                            <button class="btn btn-sm btn-outline-warning text-dark" id="btn-filter-comal" onclick="filtrarEstadoTabla('En Comal')">🔥 En Comal</button>
+                            <button class="btn btn-sm btn-outline-success" id="btn-filter-listo" onclick="filtrarEstadoTabla('Listo')">✅ Listo</button>
+                            <button class="btn btn-sm btn-outline-primary" id="btn-filter-entregado" onclick="filtrarEstadoTabla('Entregado')">🛵 Entregado</button>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th># Orden</th>
+                                    <th>Cliente</th>
+                                    <th>Detalle</th>
+                                    <th>Tipo Entrega</th>
+                                    <th>Total</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabla-pedidos-body">
+                                <!-- Filas dinámicas -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VISTA 3: COCINA KDS -->
+            <div id="section-cocina" class="view-section d-none">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4 bg-dark text-white p-3 rounded-3 shadow">
+                    <div class="d-flex align-items-center gap-3">
+                        <i class="fa-solid fa-fire-burner text-warning fs-2"></i>
+                        <div>
+                            <h4 class="fw-bold m-0">Monitor de Comales KDS</h4>
+                            <small class="text-white-50">Control de comandas en cocina en tiempo real</small>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <button class="btn btn-outline-warning btn-sm fw-bold" onclick="reproducirAlertaCocina()"><i class="fa-solid fa-bell me-1"></i> Probar Timbre</button>
+                        <span class="badge bg-danger fs-6 px-3 py-2" id="kds-counter">0 Pendientes</span>
+                    </div>
+                </div>
+                <div class="row g-3" id="kds-container">
+                    <!-- Cards de Comandas de Cocina -->
+                </div>
+            </div>
+
+            <!-- VISTA 4: CATÁLOGO MENÚ -->
+            <div id="section-menu" class="view-section d-none">
+                <div class="card border-0 shadow-sm rounded-3 p-3">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="fw-bold m-0 text-dark"><i class="fa-solid fa-utensils me-2 text-warning"></i>Catálogo de Productos y Precios</h5>
+                        <button class="btn btn-success btn-sm fw-bold" onclick="alert('Permite editar precios e ingredientes en versión completa.')">
+                            <i class="fa-solid fa-plus me-1"></i> Agregar Producto
+                        </button>
+                    </div>
+                    <div class="row g-3" id="menu-catalog-container">
+                        <!-- Productos del catálogo -->
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- MODAL NUEVO PEDIDO -->
+    <div class="modal fade" id="modalPedido" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-warning text-dark">
+                    <h5 class="modal-title fw-bold"><i class="fa-solid fa-cart-plus me-2"></i>Registrar Nuevo Pedido</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="form-nuevo-pedido">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Nombre Cliente</label>
+                            <input type="text" id="modal-cliente" class="form-control" placeholder="Ej: Doña Carmen" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Tipo Entrega</label>
+                            <select id="modal-entrega" class="form-select">
+                                <option value="En Local">🍽️ En Local</option>
+                                <option value="Para Llevar">🛍️ Para Llevar</option>
+                                <option value="A Domicilio">🛵 Domicilio</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Añadir Pupusa / Bebida</label>
+                            <div class="row g-2 mb-2">
+                                <div class="col-5">
+                                    <select id="modal-item-producto" class="form-select">
+                                        <option value="Pupusa Revueltas">Revueltas ($1.00)</option>
+                                        <option value="Pupusa Queso con Loroco">Queso/Loroco ($1.25)</option>
+                                        <option value="Pupusa Chicharrón">Chicharrón ($1.00)</option>
+                                        <option value="Pupusa Frijol con Queso">Frijol/Queso ($1.00)</option>
+                                        <option value="Horchata Artesanal">Horchata ($1.50)</option>
+                                    </select>
+                                </div>
+                                <div class="col-4">
+                                    <select id="modal-item-masa" class="form-select">
+                                        <option value="Maíz">🌽 Maíz</option>
+                                        <option value="Arroz">🌾 Arroz</option>
+                                    </select>
+                                </div>
+                                <div class="col-3">
+                                    <input type="number" id="modal-item-cant" class="form-control" value="2" min="1">
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-warning fw-bold" onclick="guardarNuevoPedido()">Guardar Pedido</button>
+                </div>
+            </div>
+        </div>
+    </div>
+<!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Script Lógica Externa del Dashboard -->
+    <script src="js/dashboard.js"></script>
+    </body>
+</html>

@@ -6,6 +6,29 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
+//Para iniciar sesion 
+// Ruta para el Login de usuarios
+app.post('/api/login', async (req, res) => {
+    const { usuario, password } = req.body;
+    try {
+        const resultado = await db.query(
+            'SELECT id, nombre, usuario, rol FROM usuarios WHERE usuario = $1 AND password = $2',
+            [usuario, password]
+        );
+
+        if (resultado.rows.length > 0) {
+            const user = resultado.rows[0];
+            res.json({ ok: true, usuario: user });
+        } else {
+            res.status(401).json({ ok: false, mensaje: 'Credenciales incorrectas' });
+        }
+    } catch (error) {
+        console.error('Error en login:', error);
+        res.status(500).json({ ok: false, mensaje: 'Error interno del servidor' });
+    }
+});
+
+
 // 1. Obtener lista de productos
 app.get('/api/productos', async (req, res) => {
     try {
