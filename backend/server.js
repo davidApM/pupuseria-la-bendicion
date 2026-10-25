@@ -98,7 +98,7 @@ app.get('/api/comandas', async (req, res) => {
             FROM pedidos p
             JOIN detalle_pedidos dp ON p.id = dp.pedido_id
             JOIN productos pr ON dp.producto_id = pr.id
-            LEFT JOIN tipos_masa tm ON dp.tipo_masa_id = tm.id
+            LEFT JOIN tipo_masa tm ON dp.tipo_masa_id = tm.id
             ORDER BY p.id DESC
         `;
         const result = await db.query(query);
