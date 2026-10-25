@@ -1,0 +1,13 @@
+{
+  "name": "pupuseria-la-bendicion",
+  "version": "1.0.0",
+  "description": "Sistema de pedidos y comandas para Pupusería La Bendición",
+  "main": "index.js",
+  "scripts": {
+    "start": "concurrently \"npm --prefix backend start\" \"npx serve frontend -l 5000\""
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "serve": "^14.2.1"
+  }
+}
