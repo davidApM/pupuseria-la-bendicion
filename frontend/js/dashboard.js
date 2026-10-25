@@ -1,5 +1,5 @@
-// CONFIGURACIÓN DE CONEXIÓN CON EL BACKEND
-const API_URL = 'http://10.239.185.123:3000/api';
+// CONFIGURACIÓN DE CONEXIÓN CON EL BACKEND LOCAL
+const API_URL = 'http://localhost:3000/api';
 
 let usuarioActual = null;
 let filtroEstadoActual = 'Todos';
@@ -21,29 +21,28 @@ document.addEventListener('DOMContentLoaded', () => {
     renderizarTodo();
 
     // Actualización continua de temporizadores KDS y sincronización con PostgreSQL (cada 3s)
-    setInterval(() => {
+    setInterval(async () => {
         // Incrementar segundos en comal para las tarjetas activas
         pedidos.forEach(p => {
             if (p.estado === 'En Comal') p.segundos = (p.segundos || 0) + 1;
         });
+
+        // Consultar PostgreSQL en segundo plano para mantener los datos al día
+        await obtenerPedidosDesdeBD();
+        renderizarKPIs();
+        renderizarTablaPedidos();
 
         // Si la sección de cocina está visible, refrescar temporizadores del KDS
         const cocinaSec = document.getElementById('section-cocina');
         if (cocinaSec && !cocinaSec.classList.contains('d-none')) {
             renderizarKDSCocina();
         }
-
-        // Consultar PostgreSQL en segundo plano para mantener los datos al día
-        obtenerPedidosDesdeBD().then(() => {
-            renderizarKPIs();
-            renderizarTablaPedidos();
-        });
     }, 3000);
 });
 
 // AUTENTICACIÓN CON BACKEND Y BASE DE DATOS
 async function autenticarUsuario(e) {
-    e.preventDefault();
+    if (e) e.preventDefault();
     const u = document.getElementById('login-user').value.trim().toLowerCase();
     const p = document.getElementById('login-pass').value.trim();
     const alertBox = document.getElementById('login-alert');
@@ -64,33 +63,38 @@ async function autenticarUsuario(e) {
             };
 
             const overlay = document.getElementById('login-overlay');
-            overlay.style.opacity = '0';
-            setTimeout(() => {
-                overlay.style.visibility = 'hidden';
-                document.getElementById('main-app').style.display = 'flex';
-                configurarVistaPorRol();
-                renderizarTodo();
-            }, 400);
+            if (overlay) {
+                overlay.style.opacity = '0';
+                setTimeout(() => {
+                    overlay.style.visibility = 'hidden';
+                    document.getElementById('main-app').style.display = 'flex';
+                    configurarVistaPorRol();
+                    renderizarTodo();
+                }, 400);
+            }
         } else {
-            alertBox.innerText = data.mensaje || 'Usuario o contraseña incorrectos.';
-            alertBox.classList.remove('d-none');
+            if (alertBox) {
+                alertBox.innerText = data.mensaje || 'Usuario o contraseña incorrectos.';
+                alertBox.classList.remove('d-none');
+            }
         }
     } catch (error) {
         console.error('Error al autenticar:', error);
-        alertBoxPara resolver los dos problemas que mencionas (**que no carga datos desde el inicio y que no actualiza la vista en tiempo real**), se deben realizar dos correcciones puntuales en `dashboard.js`:
+        if (alertBox) {
+            alertBox.innerText = 'No se pudo conectar con el servidor de PostgreSQL.';
+            alertBox.Revisando el código que compartiste, hay **un error de sintaxis que corta el archivo** en la línea 75: dentro de `autenticarUsuario`, la instrucción `catch` quedó incompleta con el texto `alertBoxPara resolver los dos problemas...`, haciendo que la función falle al capturar errores y que el resto de funciones tengan problemas de cierre.
 
-1. **Cargar datos inmediatamente:** Al iniciar (`DOMContentLoaded`), debemos llamar a `renderizarTodo()` sin esperar a que el usuario presione el botón de login.
-2. **Sincronización en tiempo real (Polling):** Debemos añadir un intervalo (`setInterval`) que consulte a PostgreSQL cada 3 segundos y actualice la interfaz sin necesidad de refrescar el navegador.
+Además, en la función `guardarNuevoPedido` faltaba relacionar los IDs reales de producto y de masa (`tipo_masa_id`) que la base de datos PostgreSQL requiere para la tabla `detalle_pedidos`.
 
 ---
 
-### 📄 Código Completo y Corregido de `frontend/js/dashboard.js`
+### 📄 Código Corregido y Completo (`frontend/js/dashboard.js`)
 
-Reemplaza todo el contenido de tu archivo `dashboard.js` con esta versión optimizada:
+Copia este bloque completo y reemplaza todo el contenido de tu archivo **`frontend/js/dashboard.js`**:
 
 ```javascript
-// CONFIGURACIÓN DE CONEXIÓN CON EL BACKEND
-const API_URL = '[http://10.239.185.123:3000/api](http://10.239.185.123:3000/api)';
+// CONFIGURACIÓN DE CONEXIÓN CON EL BACKEND LOCAL
+const API_URL = 'http://localhost:3000/api';
 
 let usuarioActual = null;
 let filtroEstadoActual = 'Todos';
@@ -99,7 +103,7 @@ let productosMenu = [];
 let chartVentas = null;
 let chartPupusas = null;
 
-// INICIALIZACIÓN
+// INICIALIZACIÓN Y SINCRONIZACIÓN AUTOMÁTICA
 document.addEventListener('DOMContentLoaded', () => {
     const dateEl = document.getElementById('current-date');
     if (dateEl) {
@@ -108,21 +112,22 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 1. CARGA INICIAL DE DATOS AL ENTRAR A LA PÁGINA
+    // Carga de datos inicial
     renderizarTodo();
 
-    // 2. SINCRONIZACIÓN CONTINUA EN TIEMPO REAL (Cada 3 segundos)
+    // Actualización continua de temporizadores KDS y sincronización con PostgreSQL (cada 3s)
     setInterval(async () => {
-        // Incrementar temporizadores de pedidos en comal
+        // Incrementar segundos en comal para las tarjetas activas
         pedidos.forEach(p => {
             if (p.estado === 'En Comal') p.segundos = (p.segundos || 0) + 1;
         });
 
-        // Actualizar datos desde la base de datos PostgreSQL
+        // Consultar PostgreSQL en segundo plano
         await obtenerPedidosDesdeBD();
         renderizarKPIs();
         renderizarTablaPedidos();
 
+        // Si la sección de cocina está visible, refrescar KDS
         const cocinaSec = document.getElementById('section-cocina');
         if (cocinaSec && !cocinaSec.classList.contains('d-none')) {
             renderizarKDSCocina();
@@ -132,7 +137,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // AUTENTICACIÓN CON BACKEND Y BASE DE DATOS
 async function autenticarUsuario(e) {
-    e.preventDefault();
+    if (e) e.preventDefault();
     const u = document.getElementById('login-user').value.trim().toLowerCase();
     const p = document.getElementById('login-pass').value.trim();
     const alertBox = document.getElementById('login-alert');
@@ -153,28 +158,36 @@ async function autenticarUsuario(e) {
             };
 
             const overlay = document.getElementById('login-overlay');
-            overlay.style.opacity = '0';
-            setTimeout(() => {
-                overlay.style.visibility = 'hidden';
-                document.getElementById('main-app').style.display = 'flex';
-                configurarVistaPorRol();
-                renderizarTodo();
-            }, 400);
+            if (overlay) {
+                overlay.style.opacity = '0';
+                setTimeout(() => {
+                    overlay.style.visibility = 'hidden';
+                    document.getElementById('main-app').style.display = 'flex';
+                    configurarVistaPorRol();
+                    renderizarTodo();
+                }, 400);
+            }
         } else {
-            alertBox.innerText = data.mensaje || 'Usuario o contraseña incorrectos.';
-            alertBox.classList.remove('d-none');
+            if (alertBox) {
+                alertBox.innerText = data.mensaje || 'Usuario o contraseña incorrectos.';
+                alertBox.classList.remove('d-none');
+            }
         }
     } catch (error) {
         console.error('Error al autenticar:', error);
-        alertBox.innerText = 'No se pudo conectar con el servidor de PostgreSQL.';
-        alertBox.classList.remove('d-none');
+        if (alertBox) {
+            alertBox.innerText = 'No se pudo conectar con el servidor local de PostgreSQL.';
+            alertBox.classList.remove('d-none');
+        }
     }
 }
 
 function cerrarSesion() {
     const overlay = document.getElementById('login-overlay');
-    overlay.style.visibility = 'visible';
-    overlay.style.opacity = '1';
+    if (overlay) {
+        overlay.style.visibility = 'visible';
+        overlay.style.opacity = '1';
+    }
     document.getElementById('main-app').style.display = 'none';
     document.getElementById('form-login').reset();
     document.getElementById('login-alert').classList.add('d-none');
@@ -182,6 +195,7 @@ function cerrarSesion() {
 }
 
 function configurarVistaPorRol() {
+    if (!usuarioActual) return;
     document.getElementById('user-role-badge').innerText = usuarioActual.role;
     if (usuarioActual.username === 'cocina') {
         navegarA('cocina');
@@ -274,9 +288,13 @@ function renderizarKPIs() {
     const totalVentas = pedidos.filter(p => p.estado !== 'Cancelado').reduce((sum, p) => sum + p.total, 0);
     const activos = pedidos.filter(p => p.estado === 'En Comal').length;
 
-    document.getElementById('kpi-ventas').innerText = `$${totalVentas.toFixed(2)}`;
-    document.getElementById('kpi-pedidos').innerText = pedidos.length;
-    document.getElementById('kpi-activos').innerText = activos;
+    const elVentas = document.getElementById('kpi-ventas');
+    const elPedidos = document.getElementById('kpi-pedidos');
+    const elActivos = document.getElementById('kpi-activos');
+
+    if (elVentas) elVentas.innerText = `$${totalVentas.toFixed(2)}`;
+    if (elPedidos) elPedidos.innerText = pedidos.length;
+    if (elActivos) elActivos.innerText = activos;
 }
 
 function renderizarTablaPedidos() {
@@ -482,6 +500,14 @@ async function guardarNuevoPedido() {
         return alert('Por favor ingresa el nombre del cliente.');
     }
 
+    const mapMasaId = { 'Maíz': 1, 'Arroz': 2 };
+    const mapProductoId = {
+        'Pupusa Revueltas': 1,
+        'Pupusa Queso con Loroco': 2,
+        'Pupusa Chicharrón': 3,
+        'Pupusa Frijol con Queso': 4,
+        'Horchata Artesanal': 5
+    };
     const precios = {
         'Pupusa Revueltas': 1.00,
         'Pupusa Queso con Loroco': 1.25,
@@ -490,6 +516,8 @@ async function guardarNuevoPedido() {
         'Horchata Artesanal': 1.50
     };
 
+    const producto_id = mapProductoId[producto] || 1;
+    const tipo_masa_id = producto.includes('Pupusa') ? (mapMasaId[tipo_masa_nombre] || 1) : null;
     const precio_unitario = precios[producto] || 1.00;
     const total = precio_unitario * cantidad;
 
@@ -499,10 +527,9 @@ async function guardarNuevoPedido() {
         tipo_entrega,
         total,
         items: [{
-            producto_id: 1,
-            nombre: producto,
+            producto_id,
+            tipo_masa_id,
             precio_unitario,
-            tipo_masa_nombre,
             cantidad
         }]
     };
