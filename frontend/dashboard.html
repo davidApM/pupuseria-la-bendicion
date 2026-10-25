@@ -10,189 +10,10 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
-    <!-- Chart.js for Sales Analytics -->
+    <!-- CSS Personalizado -->
+    <link rel="stylesheet" href="css/dashboard.css">
+    <!-- Chart.js para análisis de ventas -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        :root {
-            --primary-color: #d35400;
-            --primary-hover: #e67e22;
-            --secondary-color: #f39c12;
-            --dark-bg: #1e1e1e;
-            --card-dark: #2a2a2a;
-            --light-bg: #fcf8f2;
-            --sidebar-width: 260px;
-        }
-
-        body {
-            font-family: 'Poppins', sans-serif;
-            background-color: var(--light-bg);
-            color: #2c3e50;
-            min-height: 100vh;
-            overflow-x: hidden;
-        }
-
-        /* Login Screen Overlay */
-        #login-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: linear-gradient(135deg, rgba(30,30,30,0.95), rgba(211,84,0,0.88)), 
-                        url('https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1200&q=80') center/cover no-repeat;
-            z-index: 9999;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: opacity 0.4s ease, visibility 0.4s ease;
-        }
-
-        .login-card {
-            background: #ffffff;
-            border-radius: 20px;
-            width: 100%;
-            max-width: 440px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
-            border: 3px solid var(--secondary-color);
-            overflow: hidden;
-        }
-
-        .login-header {
-            background: linear-gradient(135deg, var(--primary-color), #c0392b);
-            color: white;
-            padding: 30px 20px;
-            text-align: center;
-        }
-
-        /* Sidebar & Layout */
-        .wrapper {
-            display: flex;
-            width: 100%;
-            align-items: stretch;
-        }
-
-        #sidebar {
-            min-width: var(--sidebar-width);
-            max-width: var(--sidebar-width);
-            background: var(--dark-bg);
-            color: #fff;
-            transition: all 0.3s;
-            min-height: 100vh;
-            z-index: 1000;
-        }
-
-        #sidebar .sidebar-header {
-            padding: 20px;
-            background: rgba(0, 0, 0, 0.25);
-            border-bottom: 3px solid var(--secondary-color);
-        }
-
-        #sidebar ul.components {
-            padding: 20px 0;
-        }
-
-        #sidebar ul li a {
-            padding: 14px 25px;
-            font-size: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            color: #d1d5db;
-            text-decoration: none;
-            transition: all 0.2s;
-            font-weight: 600;
-        }
-
-        #sidebar ul li a:hover, 
-        #sidebar ul li.active > a {
-            color: #fff;
-            background: var(--primary-color);
-            border-left: 5px solid var(--secondary-color);
-        }
-
-        #content {
-            width: 100%;
-            padding: 25px;
-            min-height: 100vh;
-            transition: all 0.3s;
-        }
-
-        /* Custom Cards & UI */
-        .stat-card {
-            border: none;
-            border-radius: 16px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-            transition: transform 0.2s;
-            background: #fff;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-3px);
-        }
-
-        .stat-icon {
-            width: 55px;
-            height: 55px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-        }
-
-        /* Status Badges */
-        .badge-comal { background-color: #e67e22; color: #fff; }
-        .badge-listo { background-color: #27ae60; color: #fff; }
-        .badge-entregado { background-color: #2980b9; color: #fff; }
-        .badge-cancelado { background-color: #c0392b; color: #fff; }
-
-        .btn-action {
-            padding: 4px 10px;
-            font-size: 0.82rem;
-            font-weight: 600;
-            border-radius: 8px;
-        }
-
-        /* Kitchen KDS Styling */
-        .kds-card {
-            background: #fff;
-            border-radius: 16px;
-            border-top: 8px solid var(--primary-color);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.08);
-            transition: all 0.3s;
-        }
-
-        .kds-card.overtime {
-            border-top-color: #e74c3c !important;
-            animation: pulse-border 1.2s infinite;
-        }
-
-        @keyframes pulse-border {
-            0% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7); }
-            70% { box-shadow: 0 0 0 12px rgba(231, 76, 60, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); }
-        }
-
-        .kds-btn {
-            font-size: 1.1rem;
-            padding: 12px;
-            border-radius: 10px;
-            font-weight: 700;
-        }
-
-        /* Responsive Mobile Styles */
-        @media (max-width: 768px) {
-            #sidebar {
-                margin-left: calc(-1 * var(--sidebar-width));
-            }
-            #sidebar.active {
-                margin-left: 0;
-            }
-            #content {
-                padding: 15px;
-            }
-        }
-    </style>
 </head>
 <body>
 
@@ -236,10 +57,10 @@
         </div>
     </div>
 
-    <!-- MAIN APP STRUCTURE -->
+    <!-- ESTRUCTURA PRINCIPAL DE LA APLICACIÓN -->
     <div class="wrapper" id="main-app" style="display: none;">
         
-        <!-- SIDEBAR -->
+        <!-- BARRA LATERAL (SIDEBAR) -->
         <nav id="sidebar">
             <div class="sidebar-header d-flex align-items-center gap-3">
                 <i class="fa-solid fa-utensils fs-3 text-warning"></i>
@@ -279,10 +100,10 @@
             </div>
         </nav>
 
-        <!-- CONTENT AREA -->
+        <!-- ÁREA DE CONTENIDO -->
         <div id="content">
             
-            <!-- NAVBAR TOP -->
+            <!-- BARRA NAVEGACIÓN SUPERIOR -->
             <nav class="navbar navbar-expand-lg navbar-light bg-white rounded-3 shadow-sm p-3 mb-4 d-flex justify-content-between align-items-center">
                 <div class="d-flex align-items-center gap-3">
                     <button type="button" id="sidebarCollapse" class="btn btn-warning btn-sm text-dark d-md-none" onclick="toggleSidebar()">
@@ -433,7 +254,7 @@
                     </div>
                 </div>
                 <div class="row g-3" id="kds-container">
-                    <!-- Cards de Comandas de Cocina -->
+                    <!-- Tarjetas de comandas de cocina -->
                 </div>
             </div>
 
