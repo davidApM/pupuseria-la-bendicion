@@ -6,8 +6,9 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-//Para iniciar sesion 
-// Ruta para el Login de usuarios
+// ==========================================
+// 1. RUTA PARA INICIO DE SESIÓN (LOGIN)
+// ==========================================
 app.post('/api/login', async (req, res) => {
     const { usuario, password } = req.body;
     try {
@@ -20,26 +21,31 @@ app.post('/api/login', async (req, res) => {
             const user = resultado.rows[0];
             res.json({ ok: true, usuario: user });
         } else {
-            res.status(401).json({ ok: false, mensaje: 'Credenciales incorrectas' });
+            res.status(401).json({ ok: false, mensaje: 'Usuario o contraseña incorrectos' });
         }
     } catch (error) {
         console.error('Error en login:', error);
-        res.status(500).json({ ok: false, mensaje: 'Error interno del servidor' });
+        res.status(500).json({ ok: false, mensaje: 'Error interno en la base de datos' });
     }
 });
 
-
-// 1. Obtener lista de productos
+// ==========================================
+// 2. OBTENER CATÁLOGO DE PRODUCTOS
+// ==========================================
 app.get('/api/productos', async (req, res) => {
     try {
-        const result = await db.query('SELECT p.*, c.nombre as categoria FROM productos p JOIN categorias c ON p.categoria_id = c.id WHERE p.disponible = true');
+        const result = await db.query(
+            'SELECT p.*, c.nombre as categoria FROM productos p JOIN categorias c ON p.categoria_id = c.id WHERE p.disponible = true'
+        );
         res.json(result.rows);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
 });
 
-// 2. Crear un nuevo pedido
+// ==========================================
+// 3. REGISTRAR UN NUEVO PEDIDO
+// ==========================================
 app.post('/api/pedidos', async (req, res) => {
     const { cliente, telefono, tipo_entrega, direccion, total, notas, items } = req.body;
     
@@ -50,7 +56,7 @@ app.post('/api/pedidos', async (req, res) => {
             INSERT INTO pedidos (cliente, telefono, tipo_entrega, direccion, total, notas) 
             VALUES ($1, $2, $3, $4, $5, $6) RETURNING id
         `;
-        const pedidoRes = await db.query(pedidoQuery, [cliente, telefono, tipo_entrega, direccion, total, notas]);
+        const pedidoRes = await db.query(pedidoQuery, [cliente, telefono || 'N/A', tipo_entrega, direccion || 'N/A', total, notas || '']);
         const pedidoId = pedidoRes.rows[0].id;
 
         const detalleQuery = `
@@ -58,38 +64,42 @@ app.post('/api/pedidos', async (req, res) => {
             VALUES ($1, $2, $3, $4, $5, $6)
         `;
 
-        for (let item of items) {
-            await db.query(detalleQuery, [
-                pedidoId,
-                item.producto_id,
-                item.tipo_masa_id || null,
-                item.cantidad,
-                item.precio_unitario,
-                item.cantidad * item.precio_unitario
-            ]);
+        if (items && Array.isArray(items)) {
+            for (let item of items) {
+                await db.query(detalleQuery, [
+                    pedidoId,
+                    item.producto_id,
+                    item.tipo_masa_id || null,
+                    item.cantidad,
+                    item.precio_unitario,
+                    item.cantidad * item.precio_unitario
+                ]);
+            }
         }
 
         await db.query('COMMIT'); // Confirmar transacción
         res.status(201).json({ status: 'success', pedido_id: pedidoId });
     } catch (err) {
         await db.query('ROLLBACK');
+        console.error('Error guardando pedido:', err);
         res.status(500).json({ error: err.message });
     }
 });
 
-// 3. Obtener comandas activas para la cocina (KDS)
+// ==========================================
+// 4. OBTENER COMANDAS Y PEDIDOS ACTIVOS
+// ==========================================
 app.get('/api/comandas', async (req, res) => {
     try {
         const query = `
             SELECT 
-                p.id, p.cliente, p.tipo_entrega, p.estado, p.notas, p.creado_en,
+                p.id, p.cliente, p.tipo_entrega, p.estado, p.total, p.notas, p.creado_en,
                 dp.cantidad, pr.nombre as producto, tm.nombre as tipo_masa
             FROM pedidos p
             JOIN detalle_pedidos dp ON p.id = dp.pedido_id
             JOIN productos pr ON dp.producto_id = pr.id
-            LEFT JOIN tipo_masa tm ON dp.tipo_masa_id = tm.id
-            WHERE p.estado IN ('En Comal', 'Listo')
-            ORDER BY p.id ASC
+            LEFT JOIN tipos_masa tm ON dp.tipo_masa_id = tm.id
+            ORDER BY p.id DESC
         `;
         const result = await db.query(query);
 
@@ -102,7 +112,9 @@ app.get('/api/comandas', async (req, res) => {
                     cliente: row.cliente,
                     tipo_entrega: row.tipo_entrega,
                     estado: row.estado,
+                    total: parseFloat(row.total || 0),
                     notas: row.notas,
+                    creado_en: row.creado_en,
                     hora: new Date(row.creado_en).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
                     items: []
                 };
@@ -116,11 +128,14 @@ app.get('/api/comandas', async (req, res) => {
 
         res.json(Object.values(comandas));
     } catch (err) {
+        console.error('Error obteniendo comandas:', err);
         res.status(500).json({ error: err.message });
     }
 });
 
-// 4. Actualizar estado del pedido (En Comal -> Listo -> Entregado)
+// ==========================================
+// 5. ACTUALIZAR ESTADO DEL PEDIDO
+// ==========================================
 app.patch('/api/pedidos/:id/estado', async (req, res) => {
     const { id } = req.params;
     const { estado } = req.body;
@@ -133,7 +148,7 @@ app.patch('/api/pedidos/:id/estado', async (req, res) => {
     }
 });
 
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`🚀 Servidor ejecutándose en http://localhost:${PORT}`);
 });

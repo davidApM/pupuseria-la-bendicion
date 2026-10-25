@@ -8,6 +8,97 @@ let productosMenu = [];
 let chartVentas = null;
 let chartPupusas = null;
 
+// INICIALIZACIÓN Y SINCRONIZACIÓN AUTOMÁTICA
+document.addEventListener('DOMContentLoaded', () => {
+    const dateEl = document.getElementById('current-date');
+    if (dateEl) {
+        dateEl.innerText = new Date().toLocaleDateString('es-SV', { 
+            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
+        });
+    }
+
+    // Carga de datos inicial
+    renderizarTodo();
+
+    // Actualización continua de temporizadores KDS y sincronización con PostgreSQL (cada 3s)
+    setInterval(() => {
+        // Incrementar segundos en comal para las tarjetas activas
+        pedidos.forEach(p => {
+            if (p.estado === 'En Comal') p.segundos = (p.segundos || 0) + 1;
+        });
+
+        // Si la sección de cocina está visible, refrescar temporizadores del KDS
+        const cocinaSec = document.getElementById('section-cocina');
+        if (cocinaSec && !cocinaSec.classList.contains('d-none')) {
+            renderizarKDSCocina();
+        }
+
+        // Consultar PostgreSQL en segundo plano para mantener los datos al día
+        obtenerPedidosDesdeBD().then(() => {
+            renderizarKPIs();
+            renderizarTablaPedidos();
+        });
+    }, 3000);
+});
+
+// AUTENTICACIÓN CON BACKEND Y BASE DE DATOS
+async function autenticarUsuario(e) {
+    e.preventDefault();
+    const u = document.getElementById('login-user').value.trim().toLowerCase();
+    const p = document.getElementById('login-pass').value.trim();
+    const alertBox = document.getElementById('login-alert');
+
+    try {
+        const respuesta = await fetch(`${API_URL}/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ usuario: u, password: p })
+        });
+
+        const data = await respuesta.json();
+
+        if (respuesta.ok && data.ok) {
+            usuarioActual = { 
+                username: data.usuario.usuario, 
+                role: data.usuario.rol === 'admin' ? 'Administrador' : 'Cocina KDS' 
+            };
+
+            const overlay = document.getElementById('login-overlay');
+            overlay.style.opacity = '0';
+            setTimeout(() => {
+                overlay.style.visibility = 'hidden';
+                document.getElementById('main-app').style.display = 'flex';
+                configurarVistaPorRol();
+                renderizarTodo();
+            }, 400);
+        } else {
+            alertBox.innerText = data.mensaje || 'Usuario o contraseña incorrectos.';
+            alertBox.classList.remove('d-none');
+        }
+    } catch (error) {
+        console.error('Error al autenticar:', error);
+        alertBoxPara resolver los dos problemas que mencionas (**que no carga datos desde el inicio y que no actualiza la vista en tiempo real**), se deben realizar dos correcciones puntuales en `dashboard.js`:
+
+1. **Cargar datos inmediatamente:** Al iniciar (`DOMContentLoaded`), debemos llamar a `renderizarTodo()` sin esperar a que el usuario presione el botón de login.
+2. **Sincronización en tiempo real (Polling):** Debemos añadir un intervalo (`setInterval`) que consulte a PostgreSQL cada 3 segundos y actualice la interfaz sin necesidad de refrescar el navegador.
+
+---
+
+### 📄 Código Completo y Corregido de `frontend/js/dashboard.js`
+
+Reemplaza todo el contenido de tu archivo `dashboard.js` con esta versión optimizada:
+
+```javascript
+// CONFIGURACIÓN DE CONEXIÓN CON EL BACKEND
+const API_URL = '[http://10.239.185.123:3000/api](http://10.239.185.123:3000/api)';
+
+let usuarioActual = null;
+let filtroEstadoActual = 'Todos';
+let pedidos = [];
+let productosMenu = [];
+let chartVentas = null;
+let chartPupusas = null;
+
 // INICIALIZACIÓN
 document.addEventListener('DOMContentLoaded', () => {
     const dateEl = document.getElementById('current-date');
@@ -17,16 +108,26 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Actualización continua de temporizadores KDS en vivo
-    setInterval(() => {
+    // 1. CARGA INICIAL DE DATOS AL ENTRAR A LA PÁGINA
+    renderizarTodo();
+
+    // 2. SINCRONIZACIÓN CONTINUA EN TIEMPO REAL (Cada 3 segundos)
+    setInterval(async () => {
+        // Incrementar temporizadores de pedidos en comal
         pedidos.forEach(p => {
             if (p.estado === 'En Comal') p.segundos = (p.segundos || 0) + 1;
         });
+
+        // Actualizar datos desde la base de datos PostgreSQL
+        await obtenerPedidosDesdeBD();
+        renderizarKPIs();
+        renderizarTablaPedidos();
+
         const cocinaSec = document.getElementById('section-cocina');
-        if (usuarioActual && cocinaSec && !cocinaSec.classList.contains('d-none')) {
+        if (cocinaSec && !cocinaSec.classList.contains('d-none')) {
             renderizarKDSCocina();
         }
-    }, 1000);
+    }, 3000);
 });
 
 // AUTENTICACIÓN CON BACKEND Y BASE DE DATOS
@@ -369,9 +470,7 @@ function inicializarGraficos() {
     }
 }
 
-// AGREGAR AL FINAL DE dashboard.js:
-
-// Registrar nuevo pedido manualmente desde el Modal del Dashboard
+// REGISTRAR NUEVO PEDIDO
 async function guardarNuevoPedido() {
     const cliente = document.getElementById('modal-cliente')?.value;
     const tipo_entrega = document.getElementById('modal-entrega')?.value;
@@ -383,7 +482,6 @@ async function guardarNuevoPedido() {
         return alert('Por favor ingresa el nombre del cliente.');
     }
 
-    // Tabla de precios de referencia rápida
     const precios = {
         'Pupusa Revueltas': 1.00,
         'Pupusa Queso con Loroco': 1.25,
@@ -401,7 +499,7 @@ async function guardarNuevoPedido() {
         tipo_entrega,
         total,
         items: [{
-            producto_id: 1, // ID genérico enviado a PostgreSQL
+            producto_id: 1,
             nombre: producto,
             precio_unitario,
             tipo_masa_nombre,
@@ -419,7 +517,6 @@ async function guardarNuevoPedido() {
         if (res.ok) {
             alert('¡Pedido registrado e ingresado al comal!');
             
-            // Cerrar el Modal de Bootstrap
             const modalEl = document.getElementById('modalPedido');
             if (modalEl && window.bootstrap) {
                 const modal = bootstrap.Modal.getInstance(modalEl);
