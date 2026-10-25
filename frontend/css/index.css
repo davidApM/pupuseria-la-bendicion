@@ -1,0 +1,101 @@
+:root {
+    --primary-color: #d35400;
+    --primary-hover: #e67e22;
+    --secondary-color: #f1c40f;
+    --bg-color: #fcf8f2;
+    --dark-color: #2c3e50;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: var(--bg-color);
+    color: #333;
+}
+
+/* Navbar personalizado */
+.navbar-brand-custom {
+    background: linear-gradient(135deg, #d35400, #c0392b);
+    border-bottom: 4px solid var(--secondary-color);
+}
+
+/* Tarjetas de Selección y Contenido */
+.card-custom {
+    border: none;
+    border-radius: 16px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+    background: #ffffff;
+    transition: all 0.3s ease;
+}
+
+/* Selector de Tipo de Masa */
+.btn-check:checked + .btn-masa-maiz {
+    background-color: #f39c12 !important;
+    color: #fff !important;
+    border-color: #f39c12 !important;
+    box-shadow: 0 4px 10px rgba(243, 156, 18, 0.4);
+}
+
+.btn-check:checked + .btn-masa-arroz {
+    background-color: #27ae60 !important;
+    color: #fff !important;
+    border-color: #27ae60 !important;
+    box-shadow: 0 4px 10px rgba(39, 174, 96, 0.4);
+}
+
+.btn-masa {
+    padding: 12px;
+    font-weight: 600;
+    border-radius: 12px !important;
+    border: 2px solid #e0e0e0;
+    transition: all 0.2s;
+}
+
+/* Tarjetas de Producto */
+.product-card {
+    border-radius: 14px;
+    border: 1px solid #f0e6df;
+    background: #fff;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.product-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 20px rgba(211, 84, 0, 0.12);
+    border-color: var(--primary-hover);
+}
+
+/* Carrito y Resumen */
+.cart-header {
+    background-color: #fff5ed;
+    border-bottom: 2px dashed #f5cba7;
+    border-radius: 16px 16px 0 0;
+}
+
+.btn-primary-custom {
+    background-color: var(--primary-color);
+    border: none;
+    color: white;
+    font-weight: 600;
+    border-radius: 10px;
+    transition: background 0.2s;
+}
+
+.btn-primary-custom:hover {
+    background-color: var(--primary-hover);
+    color: white;
+}
+
+.badge-masa {
+    font-size: 0.75rem;
+    padding: 4px 8px;
+    border-radius: 6px;
+}
+
+.qty-btn {
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    line-height: 28px;
+    text-align: center;
+    border-radius: 50%;
+}

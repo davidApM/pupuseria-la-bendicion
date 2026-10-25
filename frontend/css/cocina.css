@@ -1,0 +1,86 @@
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: #121212;
+    color: #ffffff;
+}
+
+/* Encabezado KDS */
+.kds-header {
+    background-color: #1e1e1e;
+    border-bottom: 3px solid #d35400;
+    padding: 15px 20px;
+}
+
+/* Tarjeta de Comanda */
+.card-comanda {
+    background-color: #ffffff;
+    color: #212529;
+    border-radius: 16px;
+    border: none;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    transition: transform 0.2s;
+}
+
+.card-en-comal {
+    border-top: 8px solid #e67e22;
+}
+
+.card-listo {
+    border-top: 8px solid #27ae60;
+    opacity: 0.85;
+}
+
+/* Alerta de Retraso (>15 mins) */
+.card-alerta {
+    border: 3px solid #e74c3c !important;
+    animation: pulse-border 1.5s infinite;
+}
+
+@keyframes pulse-border {
+    0% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7); }
+    70% { box-shadow: 0 0 0 12px rgba(231, 76, 60, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); }
+}
+
+/* Badges de Masa de Alto Impacto */
+.badge-maiz {
+    background-color: #f39c12 !important;
+    color: #000 !important;
+    font-size: 1.1rem !important;
+    padding: 6px 10px !important;
+}
+
+.badge-arroz {
+    background-color: #27ae60 !important;
+    color: #fff !important;
+    font-size: 1.1rem !important;
+    padding: 6px 10px !important;
+}
+
+/* Lista de Ítems */
+.item-comanda {
+    font-size: 1.35rem;
+    font-weight: 700;
+    line-height: 1.4;
+    padding: 8px 0;
+    border-bottom: 1px dashed #e0e0e0;
+}
+
+/* Botón Táctil Gigante */
+.btn-comal {
+    font-size: 1.3rem;
+    font-weight: 800;
+    padding: 14px;
+    border-radius: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.timer-badge {
+    font-size: 0.9rem;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 8px;
+    background-color: #34495e;
+    color: #fff;
+}
