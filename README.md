@@ -1,92 +1,98 @@
-# 🫓 Pupusería La Bendición - Sistema de Gestión, KDS & Menú Digital
+# 🫓 Pupusería La Bendición
 
-Sistema web integral para la administración de comandas en tiempo real, control de comales en cocina (KDS - Kitchen Display System), catálogo de menú y toma de pedidos digitales mediante integración directa con WhatsApp y PostgreSQL.
+Sistema web para pupusería: menú digital con pedidos por WhatsApp, panel administrativo y pantalla de cocina (KDS).
 
----
+## ✨ Características
+- Menú digital para clientes con envío de pedido por WhatsApp
+- Panel administrativo (productos y pedidos)
+- KDS (Kitchen Display System) para la cocina
+- Autenticación por roles
 
-## 🚀 Características Principales
-
-- **Dashboard Administrativo:** Indicadores clave de rendimiento (KPIs), ventas del día por hora, métricas de pupusas más vendidas con Chart.js y gestión integral de comandas.
-- **Monitor de Comales (KDS Cocina):** Control de órdenes activas en tiempo real mediante sondeo (*polling* cada 3 segundos), temporizadores automáticos de espera con alertas visuales de tiempo extra y timbres de aviso.
-- **Menú Digital para Clientes:** Interfaz web para selección de productos (tipo de masa maíz/arroz, cantidades), cálculo dinámico de totales y envío automático del pedido al WhatsApp del negocio.
-- **Facturación / Tickets WhatsApp:** Opción para enviar el detalle de la comanda formateado directamente al número de teléfono del cliente.
-- **Autenticación por Roles:** Acceso diferenciado para Administrador y personal de Cocina.
-
----
-
-## 🛠️ Tecnologías Utilizadas
-
-- **Frontend:** HTML5, CSS3, JavaScript (ES6+), Bootstrap 5, FontAwesome 6, Chart.js.
-- **Backend:** Node.js, Express.js.
-- **Base de Datos:** PostgreSQL (Administración de productos, comandas y detalle de items).
-
----
-
-## 📁 Estructura del Proyecto
-
-```text
+## 📁 Estructura del proyecto
+```
 pupuseria-la-bendicion/
 ├── backend/
 │   ├── config/
 │   │   └── db.js            # Conexión a PostgreSQL
-│   ├── server.js            # API REST (Endpoints de login, pedidos y productos)
+│   ├── server.js            # API REST (login, pedidos y productos)
 │   └── package.json
 └── frontend/
     ├── css/
     │   └── dashboard.css    # Estilos del panel administrativo
     ├── js/
     │   ├── dashboard.js     # Lógica del dashboard y KDS
-    │   └── menu-cliente.js  # Lógica del menú digital e integración con WhatsApp
+    │   └── menu-cliente.js  # Menú digital e integración con WhatsApp
     ├── dashboard.html       # Interfaz administrativa y KDS
     └── menu.html            # Menú digital para clientes
+```
 
-🔑 Credenciales de PruebaRolUsuarioContraseña.
-🛡️ Administradoradmin: 1234
-🍳 Cocina KDScocina:1234
+## 🔑 Credenciales de prueba (solo desarrollo local)
 
-⚙️ Instalación y Configuración Local
-1. Requisitos Previos
-Node.js (v16 o superior)
+| Rol | Usuario | Contraseña |
+|-----|---------|------------|
+| 🛡️ Administrador | `admin` | `1234` |
+| 🍳 Cocina KDS | `cocina` | `1234` |
 
-PostgreSQL (Servidor local o remoto activo)
-2. Clonar el Repositorio:
-git clone [https://github.com/TU-USUARIO/pupuseria-la-bendicion.git](https://github.com/TU-USUARIO/pupuseria-la-bendicion.git)
+> ⚠️ Cambia estas credenciales antes de desplegar en producción.
+
+## ⚙️ Instalación local
+
+### 1. Requisitos
+- Node.js v16 o superior
+- PostgreSQL activo
+
+### 2. Clonar el repositorio
+```bash
+git clone https://github.com/TU-USUARIO/pupuseria-la-bendicion.git
 cd pupuseria-la-bendicion
+```
 
-3. Configurar Backend e Instalación de Dependencias
+### 3. Base de datos
+```bash
+createdb pupuseria_db
+psql -d pupuseria_db -f backend/schema.sql
+```
+
+### 4. Backend
+```bash
 cd backend
 npm install
-
-Configura tus variables de entorno en un archivo .env o dentro de config/db.js:
+```
+Crea un archivo `.env` (puedes copiar `.env.example`):
+```
 PORT=3000
 DB_HOST=localhost
 DB_USER=postgres
 DB_PASSWORD=tu_contraseña
 DB_NAME=pupuseria_db
 DB_PORT=5432
-
-Inicia el servidor backend:
+```
+Inicia el servidor:
+```bash
 npm start
-# O con nodemon para desarrollo:
+# o en desarrollo:
 npm run dev
+```
+API disponible en `http://localhost:3000/api`
 
-El servidor quedará corriendo en: http://localhost:3000/api
+### 5. Frontend
+Sirve la carpeta `frontend` con la extensión **Live Server** de VS Code:
+- Dashboard: `http://localhost:5500/dashboard.html`
+- Menú cliente: `http://localhost:5500/menu.html`
 
-4. Ejecutar el Frontend
-Puedes servir la carpeta frontend mediante la extensión Live Server de VS Code o abrir directamente los archivos .html en tu navegador:
+## 🌐 Producción (GitHub Pages + Render)
 
-Dashboard: http://localhost:5000/dashboard.html (o frontend/dashboard.html)
+GitHub Pages solo aloja archivos estáticos, así que el backend se despliega en Render. La constante `API_URL` en `dashboard.js` y `menu-cliente.js` detecta el entorno automáticamente:
 
-Menú Cliente: http://localhost:5000/menu.html (o frontend/menu.html)
-
-🌐 Configuración para Producción (GitHub Pages + Render)
-Dado que GitHub Pages solo aloja archivos estáticos (HTML/CSS/JS) bajo HTTPS, la constante API_URL en dashboard.js y menu-cliente.js detecta automáticamente el entorno:
-
-JavaScript
+```javascript
 const API_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
     ? 'http://localhost:3000/api'
-    : '[https://TU-BACKEND-EN-RENDER.onrender.com/api](https://TU-BACKEND-EN-RENDER.onrender.com/api)';
-📄 Licencia
-Este proyecto está bajo la licencia MIT. Siéntete libre de modificarlo y adaptarlo a tu negocio.
+    : 'https://TU-BACKEND-EN-RENDER.onrender.com/api';
+```
+
+> ℹ️ En el plan gratuito de Render el servidor se suspende por inactividad; la primera petición puede tardar hasta 1 minuto.
+
+## 📄 Licencia
+Proyecto bajo licencia MIT. Siéntete libre de modificarlo y adaptarlo a tu negocio.
 
 
