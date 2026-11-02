@@ -1,7 +1,7 @@
 // CONFIGURACIÓN: Ingresa el número de tu negocio (con código de país 503 para El Salvador)
 const NUMERO_PUPUSERIA = "50379269692"; // <-- CAMBIA ESTE NÚMERO POR EL TUYO
 
-const API_URL = 'http://localhost:3000/api';
+const API_URL = 'http://localhost:5246/api';
 let productosBD = [];
 let carrito = {}; // Almacena { id_producto: { cantidad, tipo_masa, precio, nombre } }
 

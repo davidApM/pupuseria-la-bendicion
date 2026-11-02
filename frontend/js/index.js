@@ -1,4 +1,4 @@
-const API_URL = 'http://10.239.185.123:3000/api';
+const API_URL = 'http://localhost:5246/api';
 let productosDisponibles = [];
 let carrito = [];
 

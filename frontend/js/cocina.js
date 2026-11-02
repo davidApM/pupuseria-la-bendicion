@@ -1,4 +1,5 @@
-const API_URL = 'http://10.239.185.123:3000/api';
+// Dirección de nuestra API C# en local
+const API_URL = 'http://localhost:5246/api';
 let ultimosIdsPedidios = new Set();
 let esPrimeraCarga = true;
 
@@ -9,8 +10,8 @@ function reproducirSonidoComanda() {
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
         osc.type = 'sine';
-        osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // Nota D5
-        osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.15); // Nota A5
+        osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); 
+        osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.15); 
         gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
         osc.connect(gain);
@@ -18,7 +19,7 @@ function reproducirSonidoComanda() {
         osc.start();
         osc.stop(audioCtx.currentTime + 0.5);
     } catch (e) {
-        console.log("Audio no habilitado interactúe con la pantalla primero");
+        console.log("Audio no habilitado; interactúe con la pantalla primero.");
     }
 }
 
@@ -67,9 +68,10 @@ async function obtenerComandas() {
         esPrimeraCarga = false;
 
         contenedor.innerHTML = comandas.map(c => {
-            const minutos = calcularMinutosTranscurridos(c.creado_en || c.hora);
+            const minutos = calcularMinutosTranscurridos(c.creado_en);
             const esRetrasado = minutos >= 15 && c.estado === 'En Comal';
             const esListo = c.estado === 'Listo';
+            const numOrdenMostrar = c.numeroOrden ? c.numeroOrden : c.id;
 
             return `
                 <div class="col-xl-3 col-lg-4 col-md-6">
@@ -78,7 +80,7 @@ async function obtenerComandas() {
                         <!-- Encabezado de la Comanda -->
                         <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
                             <div>
-                                <h2 class="fw-extrabold m-0 text-dark">#${c.id}</h2>
+                                <h2 class="fw-extrabold m-0 text-dark">#${numOrdenMostrar}</h2>
                                 <span class="timer-badge ${esRetrasado ? 'bg-danger' : ''}">
                                     <i class="fa-regular fa-clock me-1"></i> ${minutos} min
                                 </span>
@@ -94,16 +96,16 @@ async function obtenerComandas() {
                             <span class="badge bg-secondary">${c.tipo_entrega}</span>
                         </div>
 
-                        <!-- Lista de Ítems (Pupusas y Bebidas) -->
+                        <!-- Lista de Ítems -->
                         <div class="mb-3">
                             ${c.items.map(i => `
-                                <div class="item-comanda d-flex justify-content-between align-items-center">
+                                <div class="item-comanda d-flex justify-content-between align-items-center mb-1">
                                     <div>
-                                        <span class="text-danger fw-extrabold fs-3 me-1">${i.cantidad}x</span> 
-                                        <span>${i.producto}</span>
+                                        <span class="text-danger fw-extrabold fs-4 me-1">${i.cantidad}x</span> 
+                                        <span class="fw-bold">${i.producto}</span>
                                     </div>
                                     ${i.tipo_masa ? `
-                                        <span class="badge ${i.tipo_masa === 'Maíz' ? 'badge-maiz' : 'badge-arroz'} ms-2">
+                                        <span class="badge ${i.tipo_masa === 'Maíz' ? 'bg-warning text-dark' : 'bg-info text-dark'} ms-2">
                                             ${i.tipo_masa === 'Maíz' ? '🌽 Maíz' : '🌾 Arroz'}
                                         </span>
                                     ` : ''}
@@ -147,23 +149,19 @@ async function actualizarEstado(id, nuevoEstado) {
 setInterval(obtenerComandas, 4000);
 obtenerComandas();
 
-// Función para refrescar el tiempo de las tarjetas visibles en pantalla
+// Actualizar los relojes cada 60 segundos
 function actualizarRelojesPantalla() {
     document.querySelectorAll('.card-comanda').forEach(card => {
-        // Obtenemos el tiempo o la hora almacenada en la tarjeta
         const timerElemento = card.querySelector('.timer-badge');
         if (!timerElemento) return;
 
-        // Extraemos los minutos actuales y los incrementamos
         let textoActual = timerElemento.innerText.replace(/[^0-9]/g, '');
         let minutos = parseInt(textoActual) || 0;
         
-        // Si la tarjeta no está marcada como "Listo", actualizamos
         if (!card.classList.contains('card-listo')) {
             minutos++;
             timerElemento.innerHTML = `<i class="fa-regular fa-clock me-1"></i> ${minutos} min`;
             
-            // Si supera o iguala los 15 minutos, se activa la alerta visual
             if (minutos >= 15) {
                 card.classList.add('card-alerta');
                 timerElemento.classList.add('bg-danger');
@@ -172,5 +170,4 @@ function actualizarRelojesPantalla() {
     });
 }
 
-// Actualizar los relojes cada 60 segundos (1 minuto)
 setInterval(actualizarRelojesPantalla, 60000);
