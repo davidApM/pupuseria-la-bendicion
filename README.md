@@ -1,6 +1,3 @@
-Aquí tienes la versión de tu `README.md` formateada correctamente en Markdown y ajustada a la arquitectura real que subiste a GitHub:
-
-```markdown
 # 🫓 Pupusería La Bendición
 
 Sistema web completo para pupusería: menú digital con pedidos por WhatsApp, panel administrativo, pantalla de cocina (KDS) e integración con API REST en C# (.NET).
