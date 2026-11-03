@@ -1,4 +1,6 @@
-const API_URL = 'http://localhost:3000/api';
+// CONFIGURACIÓN DE CONEXIÓN CON EL BACKEND LOCAL
+//const API_URL = 'http://localhost:3000/api';
+const API_URL = 'http://localhost:5246/api';
 let ultimosIdsPedidios = new Set();
 let esPrimeraCarga = true;
 
