@@ -8,6 +8,9 @@ let productosMenu = [];
 let chartVentas = null;
 let chartPupusas = null;
 
+// VARIABLE GLOBAL PARA ACUMULAR ÍTEMS EN EL MODAL NUEVO PEDIDO
+let itemsComandaTemp = [];
+
 // INICIALIZACIÓN Y SINCRONIZACIÓN AUTOMÁTICA
 document.addEventListener('DOMContentLoaded', () => {
     const dateEl = document.getElementById('current-date');
@@ -102,13 +105,17 @@ function cerrarSesion() {
 function configurarVistaPorRol() {
     if (!usuarioActual) return;
     document.getElementById('user-role-badge').innerText = usuarioActual.role;
+
+    const navDashboard = document.getElementById('nav-dashboard');
+    const navMenu = document.getElementById('nav-menu');
+
     if (usuarioActual.username === 'cocina') {
         navegarA('cocina');
-        document.getElementById('nav-dashboard').style.display = 'none';
-        document.getElementById('nav-menu').style.display = 'none';
+        if (navDashboard) navDashboard.style.display = 'none';
+        if (navMenu) navMenu.style.display = 'none';
     } else {
-        document.getElementById('nav-dashboard').style.display = 'block';
-        document.getElementById('nav-menu').style.display = 'block';
+        if (navDashboard) navDashboard.style.display = 'block';
+        if (navMenu) navMenu.style.display = 'block';
         navegarA('dashboard');
     }
 }
@@ -393,17 +400,12 @@ function inicializarGraficos() {
     }
 }
 
-// REGISTRAR NUEVO PEDIDO
-async function guardarNuevoPedido() {
-    const cliente = document.getElementById('modal-cliente')?.value;
-    const tipo_entrega = document.getElementById('modal-entrega')?.value;
-    const producto = document.getElementById('modal-item-producto')?.value;
-    const tipo_masa_nombre = document.getElementById('modal-item-masa')?.value;
-    const cantidad = parseInt(document.getElementById('modal-item-cant')?.value) || 1;
+// FUNCIONES PARA CONTROL TEMPORAL DE ÍTEMS EN EL MODAL NUEVO PEDIDO
 
-    if (!cliente || !cliente.trim()) {
-        return alert('Por favor ingresa el nombre del cliente.');
-    }
+function agregarItemAComandaTemp() {
+    const producto = document.getElementById('modal-item-producto')?.value;
+    const masa = document.getElementById('modal-item-masa')?.value;
+    const cantidad = parseInt(document.getElementById('modal-item-cant')?.value) || 1;
 
     const mapMasaId = { 'Maíz': 1, 'Arroz': 2 };
     const mapProductoId = {
@@ -422,21 +424,88 @@ async function guardarNuevoPedido() {
     };
 
     const producto_id = mapProductoId[producto] || 1;
-    const tipo_masa_id = producto.includes('Pupusa') ? (mapMasaId[tipo_masa_nombre] || 1) : null;
+    const esPupusa = producto.includes('Pupusa');
+    const tipo_masa_id = esPupusa ? (mapMasaId[masa] || 1) : null;
     const precio_unitario = precios[producto] || 1.00;
-    const total = precio_unitario * cantidad;
+    const subtotal = precio_unitario * cantidad;
+
+    // Agregar producto al listado temporal
+    itemsComandaTemp.push({
+        producto,
+        producto_id,
+        masa: esPupusa ? masa : '',
+        tipo_masa_id,
+        precio_unitario,
+        cantidad,
+        subtotal
+    });
+
+    renderizarTablaItemsTemp();
+}
+
+function eliminarItemComandaTemp(index) {
+    itemsComandaTemp.splice(index, 1);
+    renderizarTablaItemsTemp();
+}
+
+function renderizarTablaItemsTemp() {
+    const tbody = document.getElementById('tabla-items-comanda');
+    const totalEl = document.getElementById('modal-total-comanda');
+    if (!tbody) return;
+
+    if (itemsComandaTemp.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted">No has agregado productos aún.</td></tr>`;
+        if (totalEl) totalEl.innerText = '$0.00';
+        return;
+    }
+
+    let totalGlobal = 0;
+    tbody.innerHTML = itemsComandaTemp.map((item, idx) => {
+        totalGlobal += item.subtotal;
+        return `
+            <tr>
+                <td class="fw-bold">${item.cantidad}x</td>
+                <td>${item.producto}</td>
+                <td><small class="text-muted">${item.masa}</small></td>
+                <td class="fw-bold text-success">$${item.subtotal.toFixed(2)}</td>
+                <td class="text-end">
+                    <button type="button" class="btn btn-sm btn-link text-danger p-0" onclick="eliminarItemComandaTemp(${idx})">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+
+    if (totalEl) totalEl.innerText = `$${totalGlobal.toFixed(2)}`;
+}
+
+// GUARDAR EL PEDIDO MULTI-PRODUCTO EN POSTGRESQL
+async function guardarNuevoPedido() {
+    const cliente = document.getElementById('modal-cliente')?.value;
+    const tipo_entrega = document.getElementById('modal-entrega')?.value;
+
+    if (!cliente || !cliente.trim()) {
+        return alert('Por favor ingresa el nombre del cliente.');
+    }
+
+    if (itemsComandaTemp.length === 0) {
+        return alert('Debes agregar al menos un producto a la comanda con el botón "+".');
+    }
+
+    const total = itemsComandaTemp.reduce((sum, item) => sum + item.subtotal, 0);
 
     const nuevoPedido = {
         cliente,
         telefono: 'N/A',
         tipo_entrega,
         total,
-        items: [{
-            producto_id,
-            tipo_masa_id,
-            precio_unitario,
-            cantidad
-        }]
+        items: itemsComandaTemp.map(item => ({
+            producto_id: item.producto_id,
+            tipo_masa_id: item.tipo_masa_id,
+            precio_unitario: item.precio_unitario,
+            cantidad: item.cantidad
+        }))
     };
 
     try {
@@ -449,13 +518,17 @@ async function guardarNuevoPedido() {
         if (res.ok) {
             alert('¡Pedido registrado e ingresado al comal!');
             
+            // Limpiar formulario y la lista temporal del modal
+            itemsComandaTemp = [];
+            renderizarTablaItemsTemp();
+            document.getElementById('form-nuevo-pedido')?.reset();
+
             const modalEl = document.getElementById('modalPedido');
             if (modalEl && window.bootstrap) {
                 const modal = bootstrap.Modal.getInstance(modalEl);
                 if (modal) modal.hide();
             }
             
-            document.getElementById('form-nuevo-pedido')?.reset();
             renderizarTodo();
         } else {
             alert('Error al guardar el pedido en el servidor.');
@@ -464,4 +537,70 @@ async function guardarNuevoPedido() {
         console.error('Error enviando pedido:', err);
         alert('No se pudo conectar con el servidor.');
     }
+}
+
+
+// CONTROL VISUAL: DESACTIVAR MASA SI EL PRODUCTO NO ES PUPUSA
+function manejarCambioProducto() {
+    const productoSelect = document.getElementById('modal-item-producto');
+    const selectMasa = document.getElementById('modal-item-masa');
+    
+    if (!productoSelect || !selectMasa) return;
+
+    const producto = productoSelect.value || '';
+    const esPupusa = producto.toLowerCase().includes('pupusa');
+
+    if (esPupusa) {
+        selectMasa.disabled = false;
+        selectMasa.classList.remove('bg-light');
+    } else {
+        selectMasa.disabled = true;
+        selectMasa.classList.add('bg-light');
+    }
+}
+
+// AGREGAR ÍTEM A LA LISTA TEMPORAL DEL MODAL
+function agregarItemAComandaTemp() {
+    const producto = document.getElementById('modal-item-producto')?.value;
+    const masa = document.getElementById('modal-item-masa')?.value;
+    const cantidad = parseInt(document.getElementById('modal-item-cant')?.value) || 1;
+
+    const mapMasaId = { 'Maíz': 1, 'Arroz': 2 };
+    
+    // Mapeo actualizado con los productos de la imagen
+    const mapProductoId = {
+        'Pupusa Revuelta': 1,
+        'Pupusa Queso con Loroco': 2,
+        'Pupusa Jalapeño': 3,
+        'Fresco de Ensalada': 4,
+        'Chocolate de Olla': 5
+    };
+    
+    // Precios actualizados según la imagen
+    const precios = {
+        'Pupusa Revuelta': 1.00,
+        'Pupusa Queso con Loroco': 1.00,
+        'Pupusa Jalapeño': 1.25,
+        'Fresco de Ensalada': 1.00,
+        'Chocolate de Olla': 1.25
+    };
+
+    const producto_id = mapProductoId[producto] || 1;
+    const esPupusa = producto.toLowerCase().includes('pupusa');
+    const tipo_masa_id = esPupusa ? (mapMasaId[masa] || 1) : null;
+    const precio_unitario = precios[producto] || 1.00;
+    const subtotal = precio_unitario * cantidad;
+
+    // Agregar al listado temporal
+    itemsComandaTemp.push({
+        producto,
+        producto_id,
+        masa: esPupusa ? masa : '',
+        tipo_masa_id,
+        precio_unitario,
+        cantidad,
+        subtotal
+    });
+
+    renderizarTablaItemsTemp();
 }

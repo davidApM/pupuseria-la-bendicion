@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,12 +10,14 @@
     <!-- FontAwesome Icons -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap"
+        rel="stylesheet">
     <!-- CSS Personalizado -->
     <link rel="stylesheet" href="css/dashboard.css">
     <!-- Chart.js para análisis de ventas -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
+
 <body>
 
     <!-- OVERLAY DE LOGIN / AUTENTICACIÓN -->
@@ -34,7 +37,8 @@
                         <label class="form-label fw-semibold small text-muted">Usuario</label>
                         <div class="input-group">
                             <span class="input-group-text bg-light"><i class="fa-solid fa-user text-muted"></i></span>
-                            <input type="text" id="login-user" class="form-control" placeholder="admin o cocina" required>
+                            <input type="text" id="login-user" class="form-control" placeholder="admin o cocina"
+                                required>
                         </div>
                     </div>
                     <div class="mb-4">
@@ -59,7 +63,7 @@
 
     <!-- ESTRUCTURA PRINCIPAL DE LA APLICACIÓN -->
     <div class="wrapper" id="main-app" style="display: none;">
-        
+
         <!-- BARRA LATERAL (SIDEBAR) -->
         <nav id="sidebar">
             <div class="sidebar-header d-flex align-items-center gap-3">
@@ -94,7 +98,9 @@
             </ul>
 
             <div class="px-3 mt-auto mb-4">
-                <button class="btn btn-outline-danger w-100 fw-semibold text-white d-flex align-items-center justify-content-center gap-2" onclick="cerrarSesion()">
+                <button
+                    class="btn btn-outline-danger w-100 fw-semibold text-white d-flex align-items-center justify-content-center gap-2"
+                    onclick="cerrarSesion()">
                     <i class="fa-solid fa-arrow-right-from-bracket"></i> Cerrar Sesión
                 </button>
             </div>
@@ -102,23 +108,28 @@
 
         <!-- ÁREA DE CONTENIDO -->
         <div id="content">
-            
+
             <!-- BARRA NAVEGACIÓN SUPERIOR -->
-            <nav class="navbar navbar-expand-lg navbar-light bg-white rounded-3 shadow-sm p-3 mb-4 d-flex justify-content-between align-items-center">
+            <nav
+                class="navbar navbar-expand-lg navbar-light bg-white rounded-3 shadow-sm p-3 mb-4 d-flex justify-content-between align-items-center">
                 <div class="d-flex align-items-center gap-3">
-                    <button type="button" id="sidebarCollapse" class="btn btn-warning btn-sm text-dark d-md-none" onclick="toggleSidebar()">
+                    <button type="button" id="sidebarCollapse" class="btn btn-warning btn-sm text-dark d-md-none"
+                        onclick="toggleSidebar()">
                         <i class="fa-solid fa-bars"></i>
                     </button>
                     <h4 class="fw-bold m-0 text-dark" id="page-title">Dashboard General</h4>
                 </div>
                 <div class="d-flex align-items-center gap-3">
-                    <span class="text-muted small d-none d-sm-inline"><i class="fa-regular fa-calendar me-1"></i> <span id="current-date"></span></span>
+                    <span class="text-muted small d-none d-sm-inline"><i class="fa-regular fa-calendar me-1"></i> <span
+                            id="current-date"></span></span>
                     <div class="dropdown">
-                        <button class="btn btn-light rounded-circle shadow-sm" type="button" id="userMenu" data-bs-toggle="dropdown">
+                        <button class="btn btn-light rounded-circle shadow-sm" type="button" id="userMenu"
+                            data-bs-toggle="dropdown">
                             <i class="fa-solid fa-user-gear text-dark"></i>
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item text-danger fw-semibold" href="#" onclick="cerrarSesion()">Cerrar Sesión</a></li>
+                            <li><a class="dropdown-item text-danger fw-semibold" href="#"
+                                    onclick="cerrarSesion()">Cerrar Sesión</a></li>
                         </ul>
                     </div>
                 </div>
@@ -178,13 +189,15 @@
                 <div class="row g-4">
                     <div class="col-lg-7">
                         <div class="card border-0 shadow-sm rounded-3 p-3">
-                            <h6 class="fw-bold mb-3 text-dark"><i class="fa-solid fa-chart-area me-2 text-warning"></i>Ventas del Día por Hora</h6>
+                            <h6 class="fw-bold mb-3 text-dark"><i
+                                    class="fa-solid fa-chart-area me-2 text-warning"></i>Ventas del Día por Hora</h6>
                             <canvas id="chart-ventas" height="120"></canvas>
                         </div>
                     </div>
                     <div class="col-lg-5">
                         <div class="card border-0 shadow-sm rounded-3 p-3">
-                            <h6 class="fw-bold mb-3 text-dark"><i class="fa-solid fa-pie-chart me-2 text-warning"></i>Pupusas Más Vendidas</h6>
+                            <h6 class="fw-bold mb-3 text-dark"><i
+                                    class="fa-solid fa-pie-chart me-2 text-warning"></i>Pupusas Más Vendidas</h6>
                             <canvas id="chart-pupusas" height="180"></canvas>
                         </div>
                     </div>
@@ -195,8 +208,10 @@
             <div id="section-pedidos" class="view-section d-none">
                 <div class="card border-0 shadow-sm rounded-3 p-3">
                     <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
-                        <h5 class="fw-bold m-0 text-dark"><i class="fa-solid fa-list-check me-2 text-warning"></i>Administración de Comandas</h5>
-                        <button class="btn btn-warning btn-sm fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#modalPedido">
+                        <h5 class="fw-bold m-0 text-dark"><i
+                                class="fa-solid fa-list-check me-2 text-warning"></i>Administración de Comandas</h5>
+                        <button class="btn btn-warning btn-sm fw-bold shadow-sm" data-bs-toggle="modal"
+                            data-bs-target="#modalPedido">
                             <i class="fa-solid fa-plus me-1"></i> Nuevo Pedido
                         </button>
                     </div>
@@ -205,15 +220,21 @@
                     <div class="row g-2 mb-3">
                         <div class="col-md-4">
                             <div class="input-group input-group-sm">
-                                <span class="input-group-text bg-white"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
-                                <input type="text" id="filter-search" class="form-control" placeholder="Buscar por cliente o #ID..." onkeyup="filtrarTablaPedidos()">
+                                <span class="input-group-text bg-white"><i
+                                        class="fa-solid fa-magnifying-glass text-muted"></i></span>
+                                <input type="text" id="filter-search" class="form-control"
+                                    placeholder="Buscar por cliente o #ID..." onkeyup="filtrarTablaPedidos()">
                             </div>
                         </div>
                         <div class="col-md-8 d-flex justify-content-md-end gap-1">
-                            <button class="btn btn-sm btn-outline-secondary active" id="btn-filter-todos" onclick="filtrarEstadoTabla('Todos')">Todos</button>
-                            <button class="btn btn-sm btn-outline-warning text-dark" id="btn-filter-comal" onclick="filtrarEstadoTabla('En Comal')">🔥 En Comal</button>
-                            <button class="btn btn-sm btn-outline-success" id="btn-filter-listo" onclick="filtrarEstadoTabla('Listo')">✅ Listo</button>
-                            <button class="btn btn-sm btn-outline-primary" id="btn-filter-entregado" onclick="filtrarEstadoTabla('Entregado')">🛵 Entregado</button>
+                            <button class="btn btn-sm btn-outline-secondary active" id="btn-filter-todos"
+                                onclick="filtrarEstadoTabla('Todos')">Todos</button>
+                            <button class="btn btn-sm btn-outline-warning text-dark" id="btn-filter-comal"
+                                onclick="filtrarEstadoTabla('En Comal')">🔥 En Comal</button>
+                            <button class="btn btn-sm btn-outline-success" id="btn-filter-listo"
+                                onclick="filtrarEstadoTabla('Listo')">✅ Listo</button>
+                            <button class="btn btn-sm btn-outline-primary" id="btn-filter-entregado"
+                                onclick="filtrarEstadoTabla('Entregado')">🛵 Entregado</button>
                         </div>
                     </div>
 
@@ -240,7 +261,8 @@
 
             <!-- VISTA 3: COCINA KDS -->
             <div id="section-cocina" class="view-section d-none">
-                <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4 bg-dark text-white p-3 rounded-3 shadow">
+                <div
+                    class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4 bg-dark text-white p-3 rounded-3 shadow">
                     <div class="d-flex align-items-center gap-3">
                         <i class="fa-solid fa-fire-burner text-warning fs-2"></i>
                         <div>
@@ -249,7 +271,8 @@
                         </div>
                     </div>
                     <div class="d-flex align-items-center gap-2">
-                        <button class="btn btn-outline-warning btn-sm fw-bold" onclick="reproducirAlertaCocina()"><i class="fa-solid fa-bell me-1"></i> Probar Timbre</button>
+                        <button class="btn btn-outline-warning btn-sm fw-bold" onclick="reproducirAlertaCocina()"><i
+                                class="fa-solid fa-bell me-1"></i> Probar Timbre</button>
                         <span class="badge bg-danger fs-6 px-3 py-2" id="kds-counter">0 Pendientes</span>
                     </div>
                 </div>
@@ -262,8 +285,10 @@
             <div id="section-menu" class="view-section d-none">
                 <div class="card border-0 shadow-sm rounded-3 p-3">
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h5 class="fw-bold m-0 text-dark"><i class="fa-solid fa-utensils me-2 text-warning"></i>Catálogo de Productos y Precios</h5>
-                        <button class="btn btn-success btn-sm fw-bold" onclick="alert('Permite editar precios e ingredientes en versión completa.')">
+                        <h5 class="fw-bold m-0 text-dark"><i class="fa-solid fa-utensils me-2 text-warning"></i>Catálogo
+                            de Productos y Precios</h5>
+                        <button class="btn btn-success btn-sm fw-bold"
+                            onclick="alert('Permite editar precios e ingredientes en versión completa.')">
                             <i class="fa-solid fa-plus me-1"></i> Agregar Producto
                         </button>
                     </div>
@@ -276,56 +301,104 @@
         </div>
     </div>
 
-    <!-- MODAL NUEVO PEDIDO -->
+    <!-- MODAL NUEVO PEDIDO (MULTI-PRODUCTO) -->
     <div class="modal fade" id="modalPedido" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header bg-warning text-dark">
-                    <h5 class="modal-title fw-bold"><i class="fa-solid fa-cart-plus me-2"></i>Registrar Nuevo Pedido</h5>
+                    <h5 class="modal-title fw-bold"><i class="fa-solid fa-cart-plus me-2"></i>Registrar Nuevo Pedido
+                    </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <form id="form-nuevo-pedido">
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold">Nombre Cliente</label>
-                            <input type="text" id="modal-cliente" class="form-control" placeholder="Ej: Doña Carmen" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold">Tipo Entrega</label>
-                            <select id="modal-entrega" class="form-select">
-                                <option value="En Local">🍽️ En Local</option>
-                                <option value="Para Llevar">🛍️ Para Llevar</option>
-                                <option value="A Domicilio">🛵 Domicilio</option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold">Añadir Pupusa / Bebida</label>
-                            <div class="row g-2 mb-2">
-                                <div class="col-5">
-                                    <select id="modal-item-producto" class="form-select">
-                                        <option value="Pupusa Revueltas">Revueltas ($1.00)</option>
-                                        <option value="Pupusa Queso con Loroco">Queso/Loroco ($1.25)</option>
-                                        <option value="Pupusa Chicharrón">Chicharrón ($1.00)</option>
-                                        <option value="Pupusa Frijol con Queso">Frijol/Queso ($1.00)</option>
-                                        <option value="Horchata Artesanal">Horchata ($1.50)</option>
-                                    </select>
-                                </div>
-                                <div class="col-4">
-                                    <select id="modal-item-masa" class="form-select">
-                                        <option value="Maíz">🌽 Maíz</option>
-                                        <option value="Arroz">🌾 Arroz</option>
-                                    </select>
-                                </div>
-                                <div class="col-3">
-                                    <input type="number" id="modal-item-cant" class="form-control" value="2" min="1">
-                                </div>
+                        <!-- DATOS DEL CLIENTE -->
+                        <div class="row g-2 mb-3">
+                            <div class="col-md-7">
+                                <label class="form-label fw-semibold">Nombre Cliente</label>
+                                <input type="text" id="modal-cliente" class="form-control" placeholder="Ej: Doña Carmen"
+                                    required>
                             </div>
+                            <div class="col-md-5">
+                                <label class="form-label fw-semibold">Tipo Entrega</label>
+                                <select id="modal-entrega" class="form-select">
+                                    <option value="En Local">🍽️ En Local</option>
+                                    <option value="Para Llevar">🛍️ Para Llevar</option>
+                                    <option value="A Domicilio">🛵 Domicilio</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <hr>
+                        <h6 class="fw-bold mb-2 small text-uppercase text-muted"><i class="fa-solid fa-plus me-1"></i>
+                            Añadir Productos a la Orden</h6>
+
+                        <!-- SELECTORES PARA SELECCIONAR ÍTEM -->
+                        <div class="row g-2 align-items-end mb-3">
+                            <div class="col-md-5">
+                                <label class="form-label small text-muted">Producto</label>
+                                <select id="modal-item-producto" class="form-select form-select-sm"
+                                    onchange="manejarCambioProducto()">
+                                    <option value="Pupusa Revuelta">Pupusa Revuelta ($1.00)</option>
+                                    <option value="Pupusa Queso con Loroco">Pupusa Queso c/ Loroco ($1.00)</option>
+                                    <option value="Pupusa Jalapeño">Pupusa Jalapeño ($1.25)</option>
+                                    <option value="Fresco de Ensalada">Fresco de Ensalada ($1.00)</option>
+                                    <option value="Chocolate de Olla">Chocolate de Olla ($1.25)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label small text-muted">Masa</label>
+                                <select id="modal-item-masa" class="form-select form-select-sm">
+                                    <option value="Maíz">🌽 Maíz</option>
+                                    <option value="Arroz">🌾 Arroz</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label small text-muted">Cant.</label>
+                                <input type="number" id="modal-item-cant" class="form-control form-control-sm" value="1"
+                                    min="1">
+                            </div>
+                            <div class="col-md-2">
+                                <button type="button" class="btn btn-warning btn-sm w-100 fw-bold"
+                                    onclick="agregarItemAComandaTemp()" title="Agregar producto">
+                                    <i class="fa-solid fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- TABLA TEMPORAL DE PRE-VISUALIZACIÓN DEL PEDIDO -->
+                        <div class="card p-2 bg-light border-0 mb-3">
+                            <table class="table table-sm table-borderless m-0 small">
+                                <thead>
+                                    <tr class="border-bottom">
+                                        <th>Cant</th>
+                                        <th>Producto</th>
+                                        <th>Masa</th>
+                                        <th>Subtotal</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabla-items-comanda">
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted">No has agregado productos aún.
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- TOTAL DE LA COMANDA -->
+                        <div class="d-flex justify-content-between align-items-center fw-bold fs-5">
+                            <span>Total Comanda:</span>
+                            <span class="text-success" id="modal-total-comanda">$0.00</span>
                         </div>
                     </form>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-warning fw-bold" onclick="guardarNuevoPedido()">Guardar Pedido</button>
+                    <button type="button" class="btn btn-warning fw-bold" onclick="guardarNuevoPedido()">
+                        <i class="fa-solid fa-fire me-1"></i> Guardar Pedido
+                    </button>
                 </div>
             </div>
         </div>
@@ -337,4 +410,5 @@
     <!-- Script Lógica Externa del Dashboard -->
     <script src="js/dashboard.js"></script>
 </body>
+
 </html>
