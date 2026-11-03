@@ -4,7 +4,7 @@
   "description": "Sistema de pedidos y comandas para Pupusería La Bendición",
   "main": "index.js",
   "scripts": {
-    "start": "concurrently \"cd ../PupuseriaApi && dotnet run\" \"npx serve frontend -l 5500\""
+    "start": "concurrently \"cd C:\\Users\\fredy\\PupuseriaApi && dotnet run\" \"npx serve frontend -l 5500\""
   },
   "devDependencies": {
     "concurrently": "^8.2.2",
