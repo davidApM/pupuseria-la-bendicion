@@ -1,98 +1,117 @@
+Aquí tienes la versión de tu `README.md` formateada correctamente en Markdown y ajustada a la arquitectura real que subiste a GitHub:
+
+```markdown
 # 🫓 Pupusería La Bendición
 
-Sistema web para pupusería: menú digital con pedidos por WhatsApp, panel administrativo y pantalla de cocina (KDS).
+Sistema web completo para pupusería: menú digital con pedidos por WhatsApp, panel administrativo, pantalla de cocina (KDS) e integración con API REST en C# (.NET).
+
+---
 
 ## ✨ Características
-- Menú digital para clientes con envío de pedido por WhatsApp
-- Panel administrativo (productos y pedidos)
-- KDS (Kitchen Display System) para la cocina
-- Autenticación por roles
 
-## 📁 Estructura del proyecto
-```
+- **Menú digital para clientes:** Selección de productos y envío directo de pedidos por WhatsApp.
+- **Panel administrativo:** Gestión e integración de pedidos y productos mediante peticiones `fetch`.
+- **KDS (Kitchen Display System):** Pantalla en tiempo real para el área de cocina (`cocina.js`).
+- **Backend API REST:** Controladores estructurados en C# para manejar la persistencia de datos.
+
+---
+
+## 📁 Estructura del Proyecto
+
+```text
 pupuseria-la-bendicion/
-├── backend/
-│   ├── config/
-│   │   └── db.js            # Conexión a PostgreSQL
-│   ├── server.js            # API REST (login, pedidos y productos)
-│   └── package.json
-└── frontend/
-    ├── css/
-    │   └── dashboard.css    # Estilos del panel administrativo
-    ├── js/
-    │   ├── dashboard.js     # Lógica del dashboard y KDS
-    │   └── menu-cliente.js  # Menú digital e integración con WhatsApp
-    ├── dashboard.html       # Interfaz administrativa y KDS
-    └── menu.html            # Menú digital para clientes
+├── backend/                  # API REST en C# (.NET)
+│   ├── Controllers/          # Endpoints (PedidosController, ProductosController)
+│   ├── Data/                 # Contexto de Base de Datos y Migraciones
+│   ├── Models/               # Modelos de datos (Pedido, Producto, etc.)
+│   └── Program.cs            # Configuración e inicialización del servidor
+└── frontend/                 # Interfaz gráfica de usuario
+    ├── css/                  # Estilos (dashboard.css)
+    ├── js/                   # Lógica e integración Fetch (dashboard.js, cocina.js, menu-cliente.js)
+    ├── dashboard.html        # Panel administrativo y pantalla KDS
+    └── index.html            # Menú digital principal
+
 ```
 
-## 🔑 Credenciales de prueba (solo desarrollo local)
+---
 
-| Rol | Usuario | Contraseña |
-|-----|---------|------------|
-| 🛡️ Administrador | `admin` | `1234` |
-| 🍳 Cocina KDS | `cocina` | `1234` |
+## 🔌 Endpoints de la API
 
-> ⚠️ Cambia estas credenciales antes de desplegar en producción.
+| Método | Endpoint | Descripción |
+| --- | --- | --- |
+| `GET` | `/api/productos` | Obtiene el catálogo de productos disponibles. |
+| `POST` | `/api/productos` | Agrega un nuevo producto al sistema. |
+| `GET` | `/api/pedidos` | Lista los pedidos para el Dashboard y KDS. |
+| `POST` | `/api/pedidos` | Registra un nuevo pedido. |
 
-## ⚙️ Instalación local
+---
 
-### 1. Requisitos
-- Node.js v16 o superior
-- PostgreSQL activo
+## ⚙️ Instalación y Ejecución Local
 
-### 2. Clonar el repositorio
+### 1. Requisitos Previos
+
+* [.NET SDK 8.0 / 10.0](https://dotnet.microsoft.com/)
+* Motor de base de datos (SQL Server / PostgreSQL)
+* Visual Studio Code con extensión **Live Server** (para el frontend)
+
+### 2. Clonar el Repositorio
+
 ```bash
-git clone https://github.com/TU-USUARIO/pupuseria-la-bendicion.git
+git clone [https://github.com/davidApM/pupuseria-la-bendicion.git](https://github.com/davidApM/pupuseria-la-bendicion.git)
 cd pupuseria-la-bendicion
+
 ```
 
-### 3. Base de datos
-```bash
-createdb pupuseria_db
-psql -d pupuseria_db -f backend/schema.sql
-```
+### 3. Configurar y Ejecutar el Backend (C#)
 
-### 4. Backend
 ```bash
 cd backend
-npm install
-```
-Crea un archivo `.env` (puedes copiar `.env.example`):
-```
-PORT=3000
-DB_HOST=localhost
-DB_USER=postgres
-DB_PASSWORD=tu_contraseña
-DB_NAME=pupuseria_db
-DB_PORT=5432
-```
-Inicia el servidor:
-```bash
-npm start
-# o en desarrollo:
-npm run dev
-```
-API disponible en `http://localhost:3000/api`
+dotnet restore
+dotnet run
 
-### 5. Frontend
-Sirve la carpeta `frontend` con la extensión **Live Server** de VS Code:
-- Dashboard: `http://localhost:5500/dashboard.html`
-- Menú cliente: `http://localhost:5500/menu.html`
+```
 
-## 🌐 Producción (GitHub Pages + Render)
+> La API estará escuchando peticiones en `http://localhost:5000/api` (o el puerto configurado en Kestrel).
 
-GitHub Pages solo aloja archivos estáticos, así que el backend se despliega en Render. La constante `API_URL` en `dashboard.js` y `menu-cliente.js` detecta el entorno automáticamente:
+### 4. Ejecutar el Frontend
+
+Sirve la carpeta `frontend/` mediante **Live Server** en VS Code:
+
+* **Dashboard / KDS:** `http://127.0.0.1:5500/frontend/dashboard.html`
+* **Menú Cliente:** `http://127.0.0.1:5500/frontend/index.html`
+
+---
+
+## 🌐 Configuración de Entorno (API_URL)
+
+En los archivos JavaScript (`dashboard.js`, `cocina.js` y `menu-cliente.js`), la constante `API_URL` detecta automáticamente si estás trabajando localmente o en servidor remoto:
 
 ```javascript
 const API_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
-    ? 'http://localhost:3000/api'
-    : 'https://TU-BACKEND-EN-RENDER.onrender.com/api';
+    ? 'http://localhost:5000/api'
+    : '[https://TU-BACKEND-EN-RENDER.onrender.com/api](https://TU-BACKEND-EN-RENDER.onrender.com/api)';
+
 ```
 
-> ℹ️ En el plan gratuito de Render el servidor se suspende por inactividad; la primera petición puede tardar hasta 1 minuto.
+---
 
 ## 📄 Licencia
+
 Proyecto bajo licencia MIT. Siéntete libre de modificarlo y adaptarlo a tu negocio.
+
+```
+
+---
+
+### Pasos finales para subir el README a GitHub
+
+En tu terminal de PowerShell dentro de `Pupuseria-La-Bendicion`, ejecuta:
+
+```powershell
+git add README.md
+git commit -m "docs: actualizacion de README.md con soporte para backend C# y endpoints"
+git push origin main
+
+```
 
 
