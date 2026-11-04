@@ -557,7 +557,7 @@ async function guardarNuevoPedido() {
 // Ejemplo de la función de carga en frontend/js/dashboard.js
 async function obtenerPedidosDashboard() {
   try {
-    const response = await fetch('http://localhost:5000/api/pedidos'); // Usar /api/pedidos
+    const response = await fetch('http://localhost:5246/api/pedidos'); // Puerto corregido a 5246
     if (!response.ok) throw new Error('Error al obtener pedidos');
     
     const pedidos = await response.json();
@@ -574,3 +574,168 @@ document.addEventListener('DOMContentLoaded', () => {
   obtenerPedidosDashboard();
   setInterval(obtenerPedidosDashboard, 5000); // Opcional: auto-refresco cada 5s
 });
+
+//----
+// Arreglo global para almacenar temporalmente los productos seleccionados en el modal
+let itemsComandaTemporal = [];
+
+// 1. Deshabilitar selector de masa si el producto es una bebida
+function manejarCambioProducto() {
+    const productoSelect = document.getElementById('modal-item-producto');
+    const masaSelect = document.getElementById('modal-item-masa');
+    const valor = productoSelect.value;
+
+    if (valor.includes('Fresco') || valor.includes('Chocolate')) {
+        masaSelect.disabled = true;
+        masaSelect.value = 'N/A';
+    } else {
+        masaSelect.disabled = false;
+        masaSelect.value = 'Maíz';
+    }
+}
+
+// 2. Agregar un ítem a la lista temporal dentro del Modal
+function agregarItemAComandaTemp() {
+    const productoSelect = document.getElementById('modal-item-producto');
+    const masaSelect = document.getElementById('modal-item-masa');
+    const cantidadInput = document.getElementById('modal-item-cant');
+
+    const nombreProducto = productoSelect.value;
+    const masa = masaSelect.disabled ? 'N/A' : masaSelect.value;
+    const cantidad = parseInt(cantidadInput.value);
+
+    if (isNaN(cantidad) || cantidad <= 0) {
+        alert('Ingresa una cantidad válida.');
+        return;
+    }
+
+    // Determinar precio base a partir del texto de la opción seleccionada
+    let precio = 1.00;
+    if (nombreProducto.includes('$1.25')) {
+        precio = 1.25;
+    } else if (nombreProducto.includes('$1.00')) {
+        precio = 1.00;
+    }
+
+    const subtotal = cantidad * precio;
+
+    // Agregar objeto al arreglo
+    itemsComandaTemporal.push({
+        especialidad: nombreProducto.split(' (')[0], // Limpia el texto del precio
+        masa: masa,
+        cantidad: cantidad,
+        precio: precio,
+        subtotal: subtotal
+    });
+
+    // Renderizar tabla del modal
+    actualizarTablaModal();
+}
+
+// 3. Renderizar y calcular totales en la tabla del Modal
+function actualizarTablaModal() {
+    const tbody = document.getElementById('tabla-items-comanda');
+    const totalSpan = document.getElementById('modal-total-comanda');
+    
+    tbody.innerHTML = '';
+    let totalGeneral = 0;
+
+    if (itemsComandaTemporal.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="5" class="text-center text-muted">No has agregado productos aún.</td>
+            </tr>`;
+        totalSpan.textContent = '$0.00';
+        return;
+    }
+
+    itemsComandaTemporal.forEach((item, index) => {
+        totalGeneral += item.subtotal;
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td><strong>${item.cantidad}</strong></td>
+            <td>${item.especialidad}</td>
+            <td><span class="badge bg-secondary">${item.masa}</span></td>
+            <td>$${item.subtotal.toFixed(2)}</td>
+            <td>
+                <button type="button" class="btn btn-sm btn-outline-danger py-0 px-1" onclick="eliminarItemComandaTemp(${index})">
+                    <i class="fa-solid fa-trash-can"></i>
+                </button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+
+    totalSpan.textContent = `$${totalGeneral.toFixed(2)}`;
+}
+
+// 4. Eliminar un ítem de la comanda en preparación
+function eliminarItemComandaTemp(index) {
+    itemsComandaTemporal.splice(index, 1);
+    actualizarTablaModal();
+}
+
+// 5. ENVIAR PEDIDO COMPLETO A LA API EN C# (.NET)
+async function guardarNuevoPedido() {
+    const clienteNombre = document.getElementById('modal-cliente').value.trim();
+    const tipoEntrega = document.getElementById('modal-entrega').value;
+
+    if (!clienteNombre) {
+        alert('Por favor, ingresa el nombre del cliente.');
+        return;
+    }
+
+    if (itemsComandaTemporal.length === 0) {
+        alert('Debes agregar al menos un producto a la orden.');
+        return;
+    }
+
+    // Calcular total acumulado
+    const totalComanda = itemsComandaTemporal.reduce((acc, curr) => acc + curr.subtotal, 0);
+
+    // Objeto listo para serializar según el modelo de datos en C#
+    const nuevoPedido = {
+        clienteNombre: `${clienteNombre} (${tipoEntrega})`,
+        estado: 'Pendiente',
+        fechaCreacion: new Date().toISOString(),
+        total: totalComanda,
+        detalles: itemsComandaTemporal
+    };
+
+    try {
+        const response = await fetch('http://localhost:5246/api/pedidos', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(nuevoPedido)
+        });
+
+        if (response.ok) {
+            alert('¡Pedido registrado correctamente en el sistema!');
+
+            // Limpiar variables y formulario
+            itemsComandaTemporal = [];
+            document.getElementById('form-nuevo-pedido').reset();
+            actualizarTablaModal();
+
+            // Cerrar el Modal de Bootstrap
+            const modalElement = document.getElementById('modalPedido');
+            const modalInstance = bootstrap.Modal.getInstance(modalElement);
+            if (modalInstance) {
+                modalInstance.hide();
+            }
+
+            // Recargar la tabla de pedidos del Dashboard si la función existe
+            if (typeof cargarTablaPedidos === 'function') {
+                cargarTablaPedidos();
+            }
+        } else {
+            alert('Error al intentar registrar el pedido en el servidor.');
+        }
+    } catch (error) {
+        console.error('Error al conectar con la API de C#:', error);
+        alert('No se pudo establecer conexión con la API de C# (http://localhost:5246).');
+    }
+}
