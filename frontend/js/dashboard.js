@@ -8,25 +8,25 @@ let productosMenu = [];
 let chartVentas = null;
 let chartPupusas = null;
 
-// VARIABLE GLOBAL PARA ACUMULAR ÍTEMS EN EL MODAL NUEVO PEDIDO
+// VARIABLE GLOBAL ÚNICA PARA EL MODAL NUEVO PEDIDO
 let itemsComandaTemp = [];
 
 // INICIALIZACIÓN Y SINCRONIZACIÓN AUTOMÁTICA
 document.addEventListener('DOMContentLoaded', () => {
     const dateEl = document.getElementById('current-date');
     if (dateEl) {
-        dateEl.innerText = new Date().toLocaleDateString('es-SV', { 
-            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
+        dateEl.innerText = new Date().toLocaleDateString('es-SV', {
+            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
         });
     }
 
     // Carga de datos inicial
     renderizarTodo();
 
-    // Actualización continua de temporizadores KDS y sincronización (cada 3s)
+    // Actualización continua KDS y sincronización (cada 4s)
     setInterval(async () => {
         pedidos.forEach(p => {
-            if (p.estado === 'En Comal') p.segundos = (p.segundos || 0) + 1;
+            if (p.estado === 'En Comal') p.segundos = (p.segundos || 0) + 4;
         });
 
         await obtenerPedidosDesdeBD();
@@ -37,7 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (cocinaSec && !cocinaSec.classList.contains('d-none')) {
             renderizarKDSCocina();
         }
-    }, 3000);
+    }, 4000);
 });
 
 // AUTENTICACIÓN LOCAL DE USUARIOS
@@ -52,9 +52,9 @@ function autenticarUsuario(e) {
     const p = passInput ? passInput.value.trim() : '';
 
     if (u === 'admin' || (u === 'admin' && p === 'admin') || u === 'cocina') {
-        usuarioActual = { 
-            username: u, 
-            role: u === 'admin' ? 'Administrador' : 'Cocina KDS' 
+        usuarioActual = {
+            username: u,
+            role: u === 'admin' ? 'Administrador' : 'Cocina KDS'
         };
 
         const overlay = document.getElementById('login-overlay');
@@ -86,7 +86,7 @@ function cerrarSesion() {
     }
     const mainApp = document.getElementById('main-app');
     if (mainApp) mainApp.style.display = 'none';
-    
+
     document.getElementById('form-login')?.reset();
     document.getElementById('login-alert')?.classList.add('d-none');
     usuarioActual = null;
@@ -118,7 +118,7 @@ function navegarA(seccion) {
 
     const targetSec = document.getElementById(`section-${seccion}`);
     const targetNav = document.getElementById(`nav-${seccion}`);
-    
+
     if (targetSec) targetSec.classList.remove('d-none');
     if (targetNav) targetNav.classList.add('active');
 
@@ -138,7 +138,7 @@ function toggleSidebar() {
     document.getElementById('sidebar')?.classList.toggle('active');
 }
 
-// OBTENCIÓN Y RENDERIZADO DE DATOS DESDE POSTGRESQL
+// RENDERIZADO Y OBTENCIÓN DE DATOS
 async function renderizarTodo() {
     await obtenerPedidosDesdeBD();
     await obtenerProductosMenuBD();
@@ -150,36 +150,30 @@ async function renderizarTodo() {
 
 async function obtenerPedidosDesdeBD() {
     try {
-        // Intento 1: Ruta estándar /api/pedidos
-        let res = await fetch(`${API_URL}/pedidos`);
-        
-        // Intento 2: Ruta C# PascalCase /api/Pedidos o /Pedidos
-        if (!res.ok) {
-            res = await fetch(`http://localhost:5246/Pedidos`);
-        }
+        const res = await fetch(`${API_URL}/pedidos`);
+        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
 
-        if (res.ok) {
-            const comandasBD = await res.json();
-            pedidos = comandasBD.map(c => {
-                const inicio = c.fechaCreacion || c.creado_en ? new Date(c.fechaCreacion || c.creado_en) : new Date();
-                const diffSeg = Math.floor((new Date() - inicio) / 1000);
-                const detalles = c.detallesPedido || c.items || [];
+        const comandasBD = await res.json();
+        pedidos = comandasBD.map(c => {
+            const fechaStr = c.creado_en || c.fechaCreacion;
+            const inicio = fechaStr ? new Date(fechaStr) : new Date();
+            const diffSeg = Math.floor((new Date() - inicio) / 1000);
+            const detalles = c.items || c.detallesPedido || [];
 
-                return {
-                    id: c.id,
-                    cliente: c.clienteNombre || c.cliente || 'Cliente Telegram',
-                    entrega: c.tipoEntrega || c.tipo_entrega || 'Local',
-                    estado: c.estado,
-                    total: parseFloat(c.total || 0),
-                    segundos: diffSeg > 0 ? diffSeg : 0,
-                    items: detalles.map(i => ({
-                        cant: i.cantidad,
-                        prod: i.especialidad || i.producto || 'Pupusa',
-                        masa: i.masa || i.tipo_masa || ''
-                    }))
-                };
-            });
-        }
+            return {
+                id: c.id,
+                cliente: c.cliente || c.clienteNombre || 'Cliente Dashboard',
+                entrega: c.tipo_entrega || c.tipoEntrega || 'Local',
+                estado: c.estado,
+                total: parseFloat(c.total || 0),
+                segundos: diffSeg > 0 ? diffSeg : 0,
+                items: detalles.map(i => ({
+                    cant: i.cantidad,
+                    prod: i.producto || i.especialidad || 'Pupusa',
+                    masa: i.tipo_masa || i.masa || 'Maíz'
+                }))
+            };
+        });
     } catch (error) {
         console.error("Error consultando la API de pedidos:", error);
     }
@@ -187,15 +181,11 @@ async function obtenerPedidosDesdeBD() {
 
 async function obtenerProductosMenuBD() {
     try {
-        let res = await fetch(`${API_URL}/productos`);
-        if (!res.ok) {
-            res = await fetch(`http://localhost:5246/Productos`);
-        }
+        let res = await fetch(`${API_URL}/productos`).catch(() => null);
 
-        if (res.ok) {
+        if (res && res.ok) {
             productosMenu = await res.json();
         } else {
-            // Catálogo por defecto si no existe ProductosController
             productosMenu = [
                 { nombre: 'Pupusa Revuelta', descripcion: 'Masa de maíz/arroz con chicharrón, frijol y queso', precio: 1.00 },
                 { nombre: 'Pupusa Queso con Loroco', descripcion: 'Masa de maíz/arroz con queso y loroco', precio: 1.00 },
@@ -236,7 +226,7 @@ function renderizarTablaPedidos() {
 
     tbody.innerHTML = pedidosFiltrados.map(p => {
         const badgeClass = p.estado === 'En Comal' ? 'badge-comal' : p.estado === 'Listo' ? 'badge-listo' : p.estado === 'Entregado' ? 'badge-entregado' : 'badge-cancelado';
-        const detalleStr = p.items.map(i => `${i.cant}x ${i.prod} ${i.masa ? '('+i.masa+')' : ''}`).join(', ');
+        const detalleStr = p.items.map(i => `${i.cant}x ${i.prod} ${i.masa ? '(' + i.masa + ')' : ''}`).join(', ');
 
         return `
             <tr>
@@ -270,15 +260,12 @@ async function cambiarEstadoPedido(id, nuevoEstado) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ estado: nuevoEstado })
         });
-        
-        if (!res.ok) {
-            await fetch(`http://localhost:5246/Pedidos/${id}/estado`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ estado: nuevoEstado })
-            });
+
+        if (res.ok) {
+            renderizarTodo();
+        } else {
+            alert('Error al actualizar estado en el servidor.');
         }
-        renderizarTodo();
     } catch (error) {
         alert('No se pudo actualizar el estado del pedido.');
     }
@@ -398,10 +385,10 @@ function inicializarGraficos() {
     }
 }
 
+// LÓGICA DEL MODAL NUEVO PEDIDO
 function manejarCambioProducto() {
     const productoSelect = document.getElementById('modal-item-producto');
     const selectMasa = document.getElementById('modal-item-masa');
-    
     if (!productoSelect || !selectMasa) return;
 
     const producto = productoSelect.value || '';
@@ -413,40 +400,30 @@ function manejarCambioProducto() {
 }
 
 function agregarItemAComandaTemp() {
-    const producto = document.getElementById('modal-item-producto')?.value;
-    const masa = document.getElementById('modal-item-masa')?.value;
-    const cantidad = parseInt(document.getElementById('modal-item-cant')?.value) || 1;
+    const productoSelect = document.getElementById('modal-item-producto');
+    const masaSelect = document.getElementById('modal-item-masa');
+    const cantInput = document.getElementById('modal-item-cant');
 
-    const mapMasaId = { 'Maíz': 1, 'Arroz': 2 };
-    const mapProductoId = {
-        'Pupusa Revuelta': 1,
-        'Pupusa Queso con Loroco': 2,
-        'Pupusa Jalapeño': 3,
-        'Fresco de Ensalada': 4,
-        'Chocolate de Olla': 5
-    };
-    const precios = {
-        'Pupusa Revuelta': 1.00,
-        'Pupusa Queso con Loroco': 1.00,
-        'Pupusa Jalapeño': 1.25,
-        'Fresco de Ensalada': 1.00,
-        'Chocolate de Olla': 1.25
-    };
+    if (!productoSelect) return;
 
-    const producto_id = mapProductoId[producto] || 1;
-    const esPupusa = producto ? producto.toLowerCase().includes('pupusa') : false;
-    const tipo_masa_id = esPupusa ? (mapMasaId[masa] || 1) : null;
-    const precio_unitario = precios[producto] || 1.00;
-    const subtotal = precio_unitario * cantidad;
+    const rawProducto = productoSelect.value;
+    const especialidad = rawProducto.split(' (')[0];
+    const esPupusa = rawProducto.toLowerCase().includes('pupusa');
+    const masa = (esPupusa && masaSelect && !masaSelect.disabled) ? masaSelect.value : '';
+    const cantidad = parseInt(cantInput?.value || 1, 10);
+
+    let precio = 1.00;
+    if (rawProducto.includes('$1.25')) precio = 1.25;
+    else if (rawProducto.includes('$1.00')) precio = 1.00;
+
+    const subtotal = cantidad * precio;
 
     itemsComandaTemp.push({
-        producto,
-        producto_id,
-        masa: esPupusa ? masa : '',
-        tipo_masa_id,
-        precio_unitario,
-        cantidad,
-        subtotal
+        especialidad: especialidad,
+        tipoMasa: masa || 'Maíz',
+        cantidad: cantidad,
+        precio: precio,
+        subtotal: subtotal
     });
 
     renderizarTablaItemsTemp();
@@ -474,8 +451,8 @@ function renderizarTablaItemsTemp() {
         return `
             <tr>
                 <td class="fw-bold">${item.cantidad}x</td>
-                <td>${item.producto}</td>
-                <td><small class="text-muted">${item.masa}</small></td>
+                <td>${item.especialidad}</td>
+                <td><small class="text-muted">${item.tipoMasa || 'N/A'}</small></td>
                 <td class="fw-bold text-success">$${item.subtotal.toFixed(2)}</td>
                 <td class="text-end">
                     <button type="button" class="btn btn-sm btn-link text-danger p-0" onclick="eliminarItemComandaTemp(${idx})">
@@ -489,11 +466,12 @@ function renderizarTablaItemsTemp() {
     if (totalEl) totalEl.innerText = `$${totalGlobal.toFixed(2)}`;
 }
 
+// FUNCIÓN ÚNICA DE ENVÍO A C#
 async function guardarNuevoPedido() {
-    const cliente = document.getElementById('modal-cliente')?.value;
-    const tipo_entrega = document.getElementById('modal-entrega')?.value;
+    const clienteInput = document.getElementById('modal-cliente')?.value;
+    const tipoEntregaInput = document.getElementById('modal-entrega')?.value;
 
-    if (!cliente || !cliente.trim()) {
+    if (!clienteInput || !clienteInput.trim()) {
         return alert('Por favor ingresa el nombre del cliente.');
     }
 
@@ -501,39 +479,31 @@ async function guardarNuevoPedido() {
         return alert('Debes agregar al menos un producto a la comanda con el botón "+".');
     }
 
-    const total = itemsComandaTemp.reduce((sum, item) => sum + item.subtotal, 0);
+    const totalCalculado = itemsComandaTemp.reduce((sum, item) => sum + item.subtotal, 0);
 
+    // ESTRUCTURA EXACTA QUE ESPERA PedidoCrearDTO EN C#
     const nuevoPedido = {
-        clienteNombre: cliente,
-        chatId: 0,
-        estado: 'En Comal',
-        total: total,
-        detallesPedido: itemsComandaTemp.map(item => ({
-            cantidad: item.cantidad,
-            especialidad: item.producto,
-            masa: item.masa,
-            precio: item.precio_unitario,
-            subtotal: item.subtotal
+        cliente: tipoEntregaInput ? `${clienteInput.trim()} (${tipoEntregaInput})` : clienteInput.trim(),
+        total: parseFloat(totalCalculado.toFixed(2)),
+        items: itemsComandaTemp.map(item => ({
+            especialidad: String(item.especialidad),
+            tipoMasa: String(item.tipoMasa),
+            cantidad: parseInt(item.cantidad, 10),
+            precio: parseFloat(item.precio),
+            subtotal: parseFloat(item.subtotal)
         }))
     };
 
     try {
-        let res = await fetch(`${API_URL}/pedidos`, {
+        const res = await fetch(`${API_URL}/pedidos`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(nuevoPedido)
         });
 
-        if (!res.ok) {
-            res = await fetch(`http://localhost:5246/Pedidos`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(nuevoPedido)
-            });
-        }
-
         if (res.ok) {
             alert('¡Pedido registrado e ingresado al comal!');
+            
             itemsComandaTemp = [];
             renderizarTablaItemsTemp();
             document.getElementById('form-nuevo-pedido')?.reset();
@@ -546,196 +516,12 @@ async function guardarNuevoPedido() {
             
             renderizarTodo();
         } else {
-            alert('Error al guardar el pedido en el servidor.');
+            const errorData = await res.json().catch(() => null);
+            console.error('--- DETALLE DE ERROR C# (ModelState) ---', errorData);
+            alert('Error al intentar registrar el pedido en el servidor. Revisa los datos.');
         }
     } catch (err) {
         console.error('Error enviando pedido:', err);
-        alert('No se pudo conectar con el servidor.');
-    }
-}
-
-// Ejemplo de la función de carga en frontend/js/dashboard.js
-async function obtenerPedidosDashboard() {
-  try {
-    const response = await fetch('http://localhost:5246/api/pedidos'); // Puerto corregido a 5246
-    if (!response.ok) throw new Error('Error al obtener pedidos');
-    
-    const pedidos = await response.json();
-    
-    // Función encargada de renderizar la tabla o tarjetas en dashboard.html
-    renderizarDashboard(pedidos);
-  } catch (error) {
-    console.error('Error en el Dashboard:', error);
-  }
-}
-
-// Cargar pedidos al iniciar la página y refrescar periódicamente
-document.addEventListener('DOMContentLoaded', () => {
-  obtenerPedidosDashboard();
-  setInterval(obtenerPedidosDashboard, 5000); // Opcional: auto-refresco cada 5s
-});
-
-//----
-// Arreglo global para almacenar temporalmente los productos seleccionados en el modal
-let itemsComandaTemporal = [];
-
-// 1. Deshabilitar selector de masa si el producto es una bebida
-function manejarCambioProducto() {
-    const productoSelect = document.getElementById('modal-item-producto');
-    const masaSelect = document.getElementById('modal-item-masa');
-    const valor = productoSelect.value;
-
-    if (valor.includes('Fresco') || valor.includes('Chocolate')) {
-        masaSelect.disabled = true;
-        masaSelect.value = 'N/A';
-    } else {
-        masaSelect.disabled = false;
-        masaSelect.value = 'Maíz';
-    }
-}
-
-// 2. Agregar un ítem a la lista temporal dentro del Modal
-function agregarItemAComandaTemp() {
-    const productoSelect = document.getElementById('modal-item-producto');
-    const masaSelect = document.getElementById('modal-item-masa');
-    const cantidadInput = document.getElementById('modal-item-cant');
-
-    const nombreProducto = productoSelect.value;
-    const masa = masaSelect.disabled ? 'N/A' : masaSelect.value;
-    const cantidad = parseInt(cantidadInput.value);
-
-    if (isNaN(cantidad) || cantidad <= 0) {
-        alert('Ingresa una cantidad válida.');
-        return;
-    }
-
-    // Determinar precio base a partir del texto de la opción seleccionada
-    let precio = 1.00;
-    if (nombreProducto.includes('$1.25')) {
-        precio = 1.25;
-    } else if (nombreProducto.includes('$1.00')) {
-        precio = 1.00;
-    }
-
-    const subtotal = cantidad * precio;
-
-    // Agregar objeto al arreglo
-    itemsComandaTemporal.push({
-        especialidad: nombreProducto.split(' (')[0], // Limpia el texto del precio
-        masa: masa,
-        cantidad: cantidad,
-        precio: precio,
-        subtotal: subtotal
-    });
-
-    // Renderizar tabla del modal
-    actualizarTablaModal();
-}
-
-// 3. Renderizar y calcular totales en la tabla del Modal
-function actualizarTablaModal() {
-    const tbody = document.getElementById('tabla-items-comanda');
-    const totalSpan = document.getElementById('modal-total-comanda');
-    
-    tbody.innerHTML = '';
-    let totalGeneral = 0;
-
-    if (itemsComandaTemporal.length === 0) {
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="5" class="text-center text-muted">No has agregado productos aún.</td>
-            </tr>`;
-        totalSpan.textContent = '$0.00';
-        return;
-    }
-
-    itemsComandaTemporal.forEach((item, index) => {
-        totalGeneral += item.subtotal;
-
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td><strong>${item.cantidad}</strong></td>
-            <td>${item.especialidad}</td>
-            <td><span class="badge bg-secondary">${item.masa}</span></td>
-            <td>$${item.subtotal.toFixed(2)}</td>
-            <td>
-                <button type="button" class="btn btn-sm btn-outline-danger py-0 px-1" onclick="eliminarItemComandaTemp(${index})">
-                    <i class="fa-solid fa-trash-can"></i>
-                </button>
-            </td>
-        `;
-        tbody.appendChild(tr);
-    });
-
-    totalSpan.textContent = `$${totalGeneral.toFixed(2)}`;
-}
-
-// 4. Eliminar un ítem de la comanda en preparación
-function eliminarItemComandaTemp(index) {
-    itemsComandaTemporal.splice(index, 1);
-    actualizarTablaModal();
-}
-
-// 5. ENVIAR PEDIDO COMPLETO A LA API EN C# (.NET)
-async function guardarNuevoPedido() {
-    const clienteNombre = document.getElementById('modal-cliente').value.trim();
-    const tipoEntrega = document.getElementById('modal-entrega').value;
-
-    if (!clienteNombre) {
-        alert('Por favor, ingresa el nombre del cliente.');
-        return;
-    }
-
-    if (itemsComandaTemporal.length === 0) {
-        alert('Debes agregar al menos un producto a la orden.');
-        return;
-    }
-
-    // Calcular total acumulado
-    const totalComanda = itemsComandaTemporal.reduce((acc, curr) => acc + curr.subtotal, 0);
-
-    // Objeto listo para serializar según el modelo de datos en C#
-    const nuevoPedido = {
-        clienteNombre: `${clienteNombre} (${tipoEntrega})`,
-        estado: 'Pendiente',
-        fechaCreacion: new Date().toISOString(),
-        total: totalComanda,
-        detalles: itemsComandaTemporal
-    };
-
-    try {
-        const response = await fetch('http://localhost:5246/api/pedidos', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(nuevoPedido)
-        });
-
-        if (response.ok) {
-            alert('¡Pedido registrado correctamente en el sistema!');
-
-            // Limpiar variables y formulario
-            itemsComandaTemporal = [];
-            document.getElementById('form-nuevo-pedido').reset();
-            actualizarTablaModal();
-
-            // Cerrar el Modal de Bootstrap
-            const modalElement = document.getElementById('modalPedido');
-            const modalInstance = bootstrap.Modal.getInstance(modalElement);
-            if (modalInstance) {
-                modalInstance.hide();
-            }
-
-            // Recargar la tabla de pedidos del Dashboard si la función existe
-            if (typeof cargarTablaPedidos === 'function') {
-                cargarTablaPedidos();
-            }
-        } else {
-            alert('Error al intentar registrar el pedido en el servidor.');
-        }
-    } catch (error) {
-        console.error('Error al conectar con la API de C#:', error);
-        alert('No se pudo establecer conexión con la API de C# (http://localhost:5246).');
+        alert('No se pudo conectar con el servidor en http://localhost:5246');
     }
 }
